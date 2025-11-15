@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import Card from '../components/Card';
+import Button from '../components/Button';
+import Input from '../components/Input';
+import Modal from '../components/Modal';
+import Loading from '../components/Loading';
+import Alert from '../components/Alert';
 import { patientService } from '../services/api';
 
 const PatientsPage = () => {
@@ -12,6 +18,10 @@ const PatientsPage = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [formLoading, setFormLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -34,8 +44,33 @@ const PatientsPage = () => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.name.trim()) newErrors.name = t('validation.nameRequired');
+    if (!formData.age) newErrors.age = t('validation.ageRequired');
+    if (parseInt(formData.age) < 0 || parseInt(formData.age) > 150) {
+      newErrors.age = t('validation.ageInvalid');
+    }
+    if (!formData.contact.trim()) newErrors.contact = t('validation.contactRequired');
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
+    setFormLoading(true);
     try {
       await patientService.create(
         {
@@ -46,19 +81,24 @@ const PatientsPage = () => {
       );
       setShowModal(false);
       setFormData({ name: '', age: '', gender: 'male', contact: '' });
+      setError('');
       loadPatients();
-    } catch (error) {
-      console.error('Error creating patient:', error);
-      alert(t('messages.error'));
+    } catch (err) {
+      setError(err.response?.data?.detail || t('messages.error'));
+    } finally {
+      setFormLoading(false);
     }
   };
+
+  const filteredPatients = patients.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.contact.includes(searchTerm)
+  );
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-600"></div>
-        </div>
+        <Loading fullScreen={false} message={t('common.loading')} />
       </Layout>
     );
   }
@@ -67,33 +107,51 @@ const PatientsPage = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('patients.title')}
-          </h1>
-          <button
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {t('patients.title')}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {filteredPatients.length} {t('patients.patientsTotal')}
+            </p>
+          </div>
+          <Button
+            variant="primary"
             onClick={() => setShowModal(true)}
-            className="btn-primary"
+            className="w-full md:w-auto"
           >
-            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
             {t('patients.addNew')}
-          </button>
+          </Button>
         </div>
+
+        {/* Search */}
+        <Input
+          placeholder={t('patients.searchPlaceholder')}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
+        />
 
         {/* Patients Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {patients.map((patient) => (
-            <div key={patient.id} className="card hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
+          {filteredPatients.map((patient) => (
+            <Card
+              key={patient.id}
+              onClick={() => navigate(`/patients/${patient.id}`)}
+              hover
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-bold text-gray-900">
                     {patient.name}
                   </h3>
-                  <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-3 space-y-2 text-sm text-gray-600">
                     <p>
-                      <span className="font-medium">{t('patients.age')}:</span> {patient.age}
+                      <span className="font-medium">{t('patients.age')}:</span> {patient.age} anos
                     </p>
                     <p>
                       <span className="font-medium">{t('patients.gender')}:</span>{' '}
@@ -104,105 +162,127 @@ const PatientsPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-primary-700 dark:text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
               </div>
-              <button className="mt-4 w-full btn-secondary text-sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4 w-full"
+              >
                 {t('patients.viewDetails')}
-              </button>
-            </div>
+              </Button>
+            </Card>
           ))}
         </div>
 
-        {patients.length === 0 && (
-          <div className="card text-center py-12">
-            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <p className="text-gray-600 dark:text-gray-400">
-              Nenhum paciente cadastrado ainda. Clique em "Adicionar Paciente" para começar.
-            </p>
-          </div>
+        {filteredPatients.length === 0 && (
+          <Card>
+            <div className="text-center py-12">
+              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="text-gray-600 mt-2">
+                {searchTerm ? t('patients.noResults') : t('patients.noPatients')}
+              </p>
+            </div>
+          </Card>
         )}
       </div>
 
       {/* Add Patient Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              {t('patients.addNew')}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('patients.name')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('patients.age')}
-                </label>
-                <input
-                  type="number"
-                  required
-                  className="input-field"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('patients.gender')}
-                </label>
-                <select
-                  className="input-field"
-                  value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                >
-                  <option value="male">{t('patients.male')}</option>
-                  <option value="female">{t('patients.female')}</option>
-                  <option value="other">{t('patients.other')}</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('patients.contact')}
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  value={formData.contact}
-                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                />
-              </div>
-              <div className="flex space-x-3">
-                <button type="submit" className="btn-primary flex-1">
-                  {t('common.save')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="btn-secondary flex-1"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setError('');
+        }}
+        title={t('patients.addNew')}
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowModal(false);
+                setError('');
+              }}
+              className="flex-1"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              loading={formLoading}
+              className="flex-1"
+            >
+              {t('common.save')}
+            </Button>
+          </>
+        }
+      >
+        {error && (
+          <Alert
+            type="error"
+            message={error}
+            onClose={() => setError('')}
+            className="mb-4"
+          />
+        )}
+
+        <form className="space-y-4">
+          <Input
+            label={t('patients.name')}
+            name="name"
+            placeholder={t('patients.namePlaceholder')}
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+            required
+          />
+
+          <Input
+            label={t('patients.age')}
+            name="age"
+            type="number"
+            placeholder="0"
+            value={formData.age}
+            onChange={handleChange}
+            error={errors.age}
+            required
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('patients.gender')} <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="male">{t('patients.male')}</option>
+              <option value="female">{t('patients.female')}</option>
+              <option value="other">{t('patients.other')}</option>
+            </select>
           </div>
-        </div>
-      )}
+
+          <Input
+            label={t('patients.contact')}
+            name="contact"
+            placeholder="(11) 9999-9999"
+            value={formData.contact}
+            onChange={handleChange}
+            error={errors.contact}
+            required
+          />
+        </form>
+      </Modal>
     </Layout>
   );
 };

@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: heal_plus_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: heal_plus_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - heal_plus_network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: heal_plus_backend
+    environment:
+      MONGO_URL: mongodb://admin:admin@mongodb:27017
+      DB_NAME: heal_plus_db
+      JWT_SECRET: ${JWT_SECRET:-your_secret_key_change_in_production}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_HOURS: 168
+      EMERGENT_LLM_KEY: ${EMERGENT_LLM_KEY}
+      GOOGLE_GENAI_KEY: ${GOOGLE_GENAI_KEY}
+      CORS_ORIGINS: http://localhost:3000,http://localhost
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - heal_plus_network
+    restart: unless-stopped
+
+  # Frontend (Development)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: heal_plus_frontend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - heal_plus_network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: heal_plus_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - heal_plus_network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  heal_plus_network:
+    driver: bridge
