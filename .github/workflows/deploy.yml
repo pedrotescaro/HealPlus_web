@@ -18,14 +18,15 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          # Exemplo de deployment usando SSH
+          # Setup SSH key and known_hosts
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 644 ~/.ssh/known_hosts
           
-          # Deploy commands (exemplo)
-          ssh -i ~/.ssh/deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          # Deploy commands
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
             cd /var/www/heal-plus
             git pull origin main
             docker-compose pull
@@ -33,11 +34,12 @@ jobs:
             docker-compose exec -T backend python -m alembic upgrade head || true
           EOF
 
-      - name: Notify Slack
+      - name: Notify Slack on Failure
         if: failure()
         uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
           payload: |
             {
               "text": "Deployment failed",
@@ -48,15 +50,23 @@ jobs:
                     "type": "mrkdwn",
                     "text": "*HealPlus Deployment Failed* ❌\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
                   }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Branch:* `${{ github.ref }}`\n*Commit:* `${{ github.sha }}`"
+                  }
                 }
               ]
             }
 
-      - name: Notify Slack Success
+      - name: Notify Slack on Success
         if: success()
         uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
           payload: |
             {
               "text": "Deployment successful",
@@ -66,6 +76,13 @@ jobs:
                   "text": {
                     "type": "mrkdwn",
                     "text": "*HealPlus Deployed Successfully* ✅\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Branch:* `${{ github.ref }}`\n*Commit:* `${{ github.sha }}`"
                   }
                 }
               ]
