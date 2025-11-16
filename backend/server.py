@@ -20,7 +20,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib import colors
-from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+import google.generativeai as genai
 import tempfile
 
 ROOT_DIR = Path(__file__).parent
@@ -255,70 +255,25 @@ async def get_patient(patient_id: str, current_user: dict = Depends(get_current_
 @api_router.post('/wounds/analyze', response_model=WoundAnalysis)
 async def analyze_wound(data: WoundAnalysisCreate, current_user: dict = Depends(get_current_user)):
     try:
-        # Initialize Gemini chat
-        chat = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
-            session_id=str(uuid.uuid4()),
-            system_message="You are a specialized medical AI assistant for wound analysis. Provide detailed, clinical assessments."
-        ).with_model('gemini', 'gemini-2.0-flash')
+        # Initialize Gemini
+        genai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))
+        model = genai.GenerativeModel('gemini-2.0-flash')
         
-        # Save image temporarily
+        # Convert base64 image for Gemini
         image_data = base64.b64decode(data.image_base64.split(',')[1] if ',' in data.image_base64 else data.image_base64)
         
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-            tmp_file.write(image_data)
-            tmp_path = tmp_file.name
+        # Prepare analysis prompt
+        prompt = """Analyze this wound image and provide a detailed clinical assessment in JSON format with these keys:
+        tissue_analysis, characteristics, healing_stage, risk_assessment, recommendations"""
         
+        response = model.generate_content([prompt, {'mime_type': 'image/jpeg', 'data': image_data}])
+        
+        # Parse AI response
+        import json
         try:
-            # Prepare analysis prompt
-            prompt = f"""Analyze this wound image and provide a detailed clinical assessment:
-
-1. TISSUE CLASSIFICATION: Identify percentages of:
-   - Granulation tissue (healthy pink/red)
-   - Slough/Eschar (yellow/white/brown/black)
-   - Epithelialization
-
-2. WOUND CHARACTERISTICS:
-   - Color and appearance
-   - Exudate type and amount
-   - Edge condition (undermining, rolled edges)
-   - Surrounding skin condition
-
-3. HEALING STAGE: Assess the current phase (inflammatory, proliferative, remodeling)
-
-4. RISK ASSESSMENT: Identify concerns (infection signs, delayed healing)
-
-5. TREATMENT RECOMMENDATIONS: Suggest appropriate:
-   - Cleansing protocol
-   - Dressing type
-   - Topical therapies
-   - Follow-up interval
-
-Provide response in JSON format with keys: tissue_analysis, characteristics, healing_stage, risk_assessment, recommendations"""
-            
-            # Send to Gemini
-            image_file = FileContentWithMimeType(
-                file_path=tmp_path,
-                mime_type='image/jpeg'
-            )
-            
-            user_message = UserMessage(
-                text=prompt,
-                file_contents=[image_file]
-            )
-            
-            response = await chat.send_message(user_message)
-            
-            # Parse AI response
-            import json
-            try:
-                ai_analysis = json.loads(response)
-            except:
-                ai_analysis = {'raw_response': response}
-            
-        finally:
-            # Clean up temp file
-            os.unlink(tmp_path)
+            ai_analysis = json.loads(response.text)
+        except:
+            ai_analysis = {'raw_response': response.text}
         
         # Create wound analysis
         analysis = WoundAnalysis(
@@ -462,29 +417,30 @@ async def generate_report(wound_id: str, current_user: dict = Depends(get_curren
 async def chat_with_zelo(data: ChatMessageCreate, current_user: dict = Depends(get_current_user)):
     session_id = data.session_id or str(uuid.uuid4())
     
-    # Initialize chat
-    chat = LlmChat(
-        api_key=os.environ.get('EMERGENT_LLM_KEY'),
-        session_id=session_id,
-        system_message="You are Zelo, an intelligent medical assistant specializing in wound care. Provide helpful, evidence-based advice while reminding users to consult healthcare professionals for diagnosis and treatment."
-    ).with_model('gemini', 'gemini-2.0-flash')
-    
-    user_message = UserMessage(text=data.message)
-    response = await chat.send_message(user_message)
-    
-    # Save chat
-    chat_msg = ChatMessage(
-        user_id=current_user['id'],
-        session_id=session_id,
-        message=data.message,
-        response=response
-    )
-    
-    doc = chat_msg.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
-    await db.chat_messages.insert_one(doc)
-    
-    return chat_msg
+    try:
+        # Initialize Gemini
+        genai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        system_prompt = "You are Zelo, an intelligent medical assistant specializing in wound care. Provide helpful, evidence-based advice while reminding users to consult healthcare professionals for diagnosis and treatment."
+        response = model.generate_content(f"{system_prompt}\n\nUser: {data.message}")
+        
+        # Save chat
+        chat_msg = ChatMessage(
+            user_id=current_user['id'],
+            session_id=session_id,
+            message=data.message,
+            response=response.text
+        )
+        
+        doc = chat_msg.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        await db.chat_messages.insert_one(doc)
+        
+        return chat_msg
+    except Exception as e:
+        logging.error(f"Chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
 @api_router.get('/chat/history/{session_id}', response_model=List[ChatMessage])
 async def get_chat_history(session_id: str, current_user: dict = Depends(get_current_user)):

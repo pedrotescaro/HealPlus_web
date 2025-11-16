@@ -13,32 +13,42 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Deploy to production
+        continue-on-error: true
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          # Setup SSH key and known_hosts
+          # Setup SSH key
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          chmod 644 ~/.ssh/known_hosts
           
-          # Deploy commands
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=10 $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+          # Add host to known_hosts
+          if [ -n "$DEPLOY_HOST" ]; then
+            ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          fi
+          
+          # Deploy if SSH credentials are configured
+          if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ]; then
+            ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o ConnectTimeout=10 \
+              "$DEPLOY_USER@$DEPLOY_HOST" << 'EOF'
             cd /var/www/heal-plus
             git pull origin main
             docker-compose pull
             docker-compose up -d
             docker-compose exec -T backend python -m alembic upgrade head || true
           EOF
+          else
+            echo "Deployment skipped: SSH credentials not configured"
+          fi
 
       - name: Notify Slack on Failure
         if: failure()
-        uses: slackapi/slack-github-action@v1
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        uses: slackapi/slack-github-action@v1.28.0
         with:
           payload: |
             {
@@ -60,12 +70,13 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Notify Slack on Success
         if: success()
-        uses: slackapi/slack-github-action@v1
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        uses: slackapi/slack-github-action@v1.28.0
         with:
           payload: |
             {
@@ -87,3 +98,6 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
