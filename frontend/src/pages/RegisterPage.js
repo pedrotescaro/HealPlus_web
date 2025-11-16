@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import Alert from '../components/Alert';
+// Componentes presumidos da sua UI library
+import { Button } from '../components/ui/button'; 
+import { Input } from '../components/ui/input'; 
+import Alert from '../components/Alert'; 
+import { Logo } from '../components/logo'; // Componente Logo customizado
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react'; // Ícones
 
 const RegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, loginSocial } = useAuth(); // Presumindo uma função loginSocial
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,16 +25,24 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Novo state para confirmar senha
+
+  // --- Lógica de Validação ---
 
   const validateForm = () => {
     const newErrors = {};
     
     if (!formData.name.trim()) newErrors.name = t('validation.nameRequired');
     if (!formData.email.trim()) newErrors.email = t('validation.emailRequired');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = t('validation.emailInvalid');
+    
+    // Regex simples para validação de e-mail
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = t('validation.emailInvalid');
+    }
+    
     if (!formData.password) newErrors.password = t('validation.passwordRequired');
     if (formData.password.length < 6) newErrors.password = t('validation.passwordTooShort');
+    
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = t('validation.passwordsMismatch');
     }
@@ -56,162 +70,247 @@ const RegisterPage = () => {
       await register(formData.email, formData.password, formData.name, formData.role);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.detail || t('messages.error'));
+      // Tratamento de erro
+      const errorMessage = err.response?.data?.detail || t('messages.registerFailed');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // Função fictícia para login social (usada para botões)
+  const handleSocialLogin = (provider) => {
+    setError(t('messages.socialLoginNotImplemented', { provider }));
+  };
+
+  // --- Renderização do Componente ---
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-[#0f1f3a] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-start justify-between">
-          <Link to="/" className="text-primary-200 hover:text-white">{t('common.back')}</Link>
-        </div>
+    // Container principal: tela cheia com tema escuro
+    <div className="min-h-screen bg-gray-900 dark:bg-gray-950 text-white flex">
+      
+      {/* Coluna Esquerda: Informações e Logo (Escondida em Mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 xl:p-24 bg-gray-950 relative overflow-hidden">
+        {/* Adiciona um efeito de gradiente sutil no fundo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-blue-900/40"></div>
+        
+        {/* Botão Voltar */}
+        <button onClick={() => navigate('/')} className="absolute top-8 left-8 text-gray-400 hover:text-white transition-colors flex items-center z-10">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Voltar
+        </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-6">
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary-800 font-bold text-xl">H+</span>
-              </div>
-              <span className="text-2xl font-bold">Heal+</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold">Crie sua conta no <span className="text-primary-400">Heal+</span></h1>
-            <p className="text-primary-100 max-w-lg">A plataforma inteligente para gestão e análise de feridas com tecnologia de ponta.</p>
-            <div className="grid grid-cols-2 gap-4 text-primary-200">
-              <div className="flex items-center space-x-2"><span className="w-1.5 h-1.5 bg-primary-400 rounded-full"></span><span>Análise com IA</span></div>
-              <div className="flex items-center space-x-2"><span className="w-1.5 h-1.5 bg-primary-400 rounded-full"></span><span>Relatórios Automáticos</span></div>
-              <div className="flex items-center space-x-2"><span className="w-1.5 h-1.5 bg-primary-400 rounded-full"></span><span>Acompanhamento Médico</span></div>
-              <div className="flex items-center space-x-2"><span className="w-1.5 h-1.5 bg-primary-400 rounded-full"></span><span>Histórico Completo</span></div>
-            </div>
+        {/* Conteúdo Central */}
+        <div className="flex flex-col justify-center h-full space-y-8 z-10">
+          <div className="text-left">
+            <Logo size="lg" /> {/* Componente Logo adaptado ao tema escuro */}
+            <h2 className="text-4xl font-extrabold mt-6 mb-2">
+              Comece sua jornada no <span className="text-blue-400">Heal+</span>
+            </h2>
+            <p className="text-gray-400 text-lg max-w-md">
+              Junte-se a nós para transformar a gestão de feridas com inteligência artificial e relatórios completos.
+            </p>
           </div>
+          
+          {/* Lista de Recursos */}
+          <ul className="list-disc list-inside text-gray-300 space-y-2 text-md">
+            <li className="flex items-center">
+              <span className="text-blue-400 text-xl mr-2">•</span> Análise com IA
+            </li>
+            <li className="flex items-center">
+              <span className="text-blue-400 text-xl mr-2">•</span> Relatórios Automáticos
+            </li>
+            <li className="flex items-center">
+              <span className="text-blue-400 text-xl mr-2">•</span> Acompanhamento Médico
+            </li>
+            <li className="flex items-center">
+              <span className="text-blue-400 text-xl mr-2">•</span> Histórico Completo
+            </li>
+          </ul>
+        </div>
+        
+        {/* Footer da Coluna Esquerda */}
+        <div className="text-sm text-gray-500 z-10">
+          © 2025 Heal+. Todos os direitos reservados.
+        </div>
+      </div>
+      
+      {/* Coluna Direita: Formulário de Cadastro */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-16 xl:p-24 bg-gray-900 dark:bg-gray-950 overflow-y-auto">
+        <div className="w-full max-w-md">
+          
+          {/* Botão Voltar (Mobile) */}
+          <button onClick={() => navigate('/')} className="lg:hidden text-gray-400 hover:text-white transition-colors flex items-center mb-8">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Voltar
+          </button>
 
-          <div className="bg-gray-900/80 border border-white/10 rounded-xl p-8 shadow-2xl shadow-black/40">
-            <h2 className="text-2xl font-bold mb-6">Cadastre-se</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Crie sua conta
+          </h2>
+          <p className="text-gray-400 mb-8">
+            Preencha os dados abaixo para começar.
+          </p>
 
-            {error && (
-              <Alert type="error" message={error} onClose={() => setError('')} className="mb-6" />
-            )}
+          {error && (
+            // Componente Alert estilizado para o Dark Mode
+            <Alert
+              type="error"
+              message={error}
+              onClose={() => setError('')}
+              className="mb-6 bg-red-900/30 border-red-700 text-red-300"
+            />
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm mb-2">Nome Completo</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Seu nome"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg bg-gray-800 text-white border ${errors.name ? 'border-red-500' : 'border-white/10'} focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                  required
-                />
-                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {/* Campo Nome */}
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium text-gray-300">Nome Completo</label>
+              <Input
+                id="name"
+                name="name"
+                placeholder={t('auth.namePlaceholder')}
+                value={formData.name}
+                onChange={handleChange}
+                error={errors.name}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-blue-500"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg bg-gray-800 text-white border ${errors.email ? 'border-red-500' : 'border-white/10'} focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                  required
-                />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-              </div>
+            {/* Campo Email */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-gray-300">Email</label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                error={errors.email}
+                className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-blue-500"
+              />
+            </div>
+            
+            {/* Campo Tipo de Usuário (Role) */}
+            <div className="space-y-2">
+              <label htmlFor="role" className="text-sm font-medium text-gray-300">Tipo de Usuário</label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                // Estilização Dark Mode para Select
+                className="w-full px-4 py-2.5 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 text-white"
+              >
+                <option value="professional">{t('auth.professional')}</option>
+                <option value="patient">{t('auth.patient')}</option>
+              </select>
+            </div>
 
-              <div>
-                <label className="block text-sm mb-2">Função</label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="professional">Profissional de Saúde</option>
-                  <option value="patient">Paciente</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm mb-2">Senha</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
+            {/* Campo Senha */}
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-gray-300">Senha</label>
+              <div className="relative">
+                <Input
+                  id="password"
                   name="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pr-10 px-4 py-2 rounded-lg bg-gray-800 text-white border ${errors.password ? 'border-red-500' : 'border-white/10'} focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                  required
+                  error={errors.password}
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-blue-500 pr-10"
                 />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white">
-                    {showPassword ? (
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 2l20 20"/><path d="M17.94 17.94A10.94 10.94 0 0112 20c-5.523 0-10-4.477-10-10a10.94 10.94 0 013.06-7.94M10.58 10.58A3 3 0 1113.42 13.42"/></svg>
-                    ) : (
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    )}
-                  </button>
-                </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 focus:outline-none"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm mb-2">Confirmar Senha</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
+            {/* Campo Confirmar Senha */}
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300">Confirmar Senha</label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
                   name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full pr-10 px-4 py-2 rounded-lg bg-gray-800 text-white border ${errors.confirmPassword ? 'border-red-500' : 'border-white/10'} focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                  required
+                  error={errors.confirmPassword}
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:ring-blue-500 pr-10"
                 />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white">
-                    {showConfirmPassword ? (
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 2l20 20"/><path d="M17.94 17.94A10.94 10.94 0 0112 20c-5.523 0-10-4.477-10-10a10.94 10.94 0 013.06-7.94M10.58 10.58A3 3 0 1113.42 13.42"/></svg>
-                    ) : (
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 focus:outline-none"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+            </div>
 
-              <button type="submit" disabled={loading} className="w-full mt-2 px-6 py-3 rounded-lg bg-primary-600 hover:bg-primary-500 text-white font-semibold">
-                {t('auth.registerButton')}
+            {/* Botão Cadastrar */}
+            <Button
+              type="submit"
+              // Estilo do botão primário azul na imagem
+              className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg"
+              loading={loading}
+              disabled={loading}
+            >
+              {loading ? t('auth.registering') : t('auth.registerButton')}
+            </Button>
+          </form>
+
+          {/* Separador "OU CONTINUE COM" */}
+          <div className="flex items-center my-6">
+            <div className="flex-grow border-t border-gray-700"></div>
+            <span className="flex-shrink mx-4 text-gray-500 text-sm font-medium">OU CONTINUE COM</span>
+            <div className="flex-grow border-t border-gray-700"></div>
+          </div>
+
+          {/* Opções de Login Social (Simulando ícones) */}
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => handleSocialLogin('Google')}
+              className="flex items-center justify-center p-3 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+            >
+              <span className="w-5 h-5 mr-2 inline-flex items-center justify-center rounded-sm bg-white text-black text-xs font-bold">G</span>
+              Google
+            </button>
+            <button
+              onClick={() => handleSocialLogin('Microsoft')}
+              className="flex items-center justify-center p-3 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+            >
+              <span className="w-5 h-5 mr-2 inline-flex items-center justify-center rounded-sm bg-white text-black text-[10px] font-bold">MS</span>
+              Microsoft
+            </button>
+            <div className="col-span-2">
+              <button
+                onClick={() => handleSocialLogin('Apple')}
+                className="w-full flex items-center justify-center p-3 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+              >
+                <span className="w-5 h-5 mr-2 inline-flex items-center justify-center rounded-sm bg-white text-black text-xs font-bold"></span>
+                Apple
               </button>
-            </form>
-
-            <div className="mt-6">
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <span className="h-px w-full bg-white/10"></span>
-                <span>Ou continue com</span>
-                <span className="h-px w-full bg-white/10"></span>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-.9 2.3-1.9 3l3.1 2.4C20.6 17.9 21.5 15.6 21.5 12c0-.7-.1-1.4-.3-2H12z"/><path fill="#34A853" d="M6.6 14.3l-1 3-3.2.1C3.4 19.5 7.4 22 12 22c3 0 5.5-1 7.3-2.8l-3.1-2.4c-.9.6-2.2 1-4.2 1-3.2 0-5.9-2.1-6.8-5.1z"/><path fill="#4A90E2" d="M2.4 7.4l3.1 2.4c.8-2.4 3.1-4.1 6.5-4.1 1.7 0 3.2.6 4.4 1.6l3.3-3.2C17.5 2.2 14.9 1 12 1 7.4 1 3.4 3.5 2.4 7.4z"/><path fill="#FBBC05" d="M12 4.9c-3.4 0-5.7 1.7-6.5 4.1L2.4 7.4C3.4 3.5 7.4 1 12 1c2.9 0 5.5 1.2 7.3 3.3l-3.3 3.2c-1.2-1-2.7-1.6-4.4-1.6z"/></svg>
-                  Google
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24"><rect width="9" height="9" x="2" y="2" fill="#F25022"/><rect width="9" height="9" x="13" y="2" fill="#7FBA00"/><rect width="9" height="9" x="2" y="13" fill="#00A4EF"/><rect width="9" height="9" x="13" y="13" fill="#FFB900"/></svg>
-                  Microsoft
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1c-.996.06-2.18.7-2.883 1.53-.62.73-1.182 1.835-1.03 2.91 1.12.09 2.27-.64 2.95-1.48.66-.8 1.19-1.93.96-2.96zM20.9 15.89c-.35-.86-1.52-2.46-2.97-2.46-1.4 0-2 .66-2.96.66-.98 0-1.74-.65-2.95-.65-1.19 0-2.45.72-3.33 1.84-1.22 1.55-2.16 4.38-1.19 6.78.89.02 1.65-.58 2.21-1.15.52-.52 1.03-1.13 1.78-1.13.73 0 .97.37 1.72.37.74 0 1.15-.36 1.71-.93.64-.63 1.12-1.36 1.6-2.11.49-.77.9-1.57 1.44-2.33.53-.76 1.09-1.49 1.84-2.09z"/></svg>
-                  Apple
-                </button>
-              </div>
             </div>
+          </div>
 
-            <div className="mt-6 text-center text-sm text-primary-200">
-              Já tem uma conta? <Link to="/login" className="text-primary-400 hover:text-primary-300">Entrar</Link>
-            </div>
+          {/* Link para Login */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-400">
+              {t('auth.hasAccount')}{' '}
+              <Link to="/login" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
+                {t('auth.loginHere')}
+              </Link>
+            </p>
           </div>
         </div>
       </div>

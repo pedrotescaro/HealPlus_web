@@ -19,15 +19,19 @@
     "title": "Welcome to Heal+",
     "subtitle": "The intelligent platform for wound management and analysis with cutting-edge technology",
     "aiAnalysis": "AI Analysis",
-    "aiAnalysisDesc": "Artificial intelligence technology for precise wound analysis",
+    "aiAnalysisDesc": "Artificial intelligence for precise wound analysis",
     "autoReports": "Automatic Reports",
-    "autoReportsDesc": "Automatic generation of detailed PDF reports",
+    "autoReportsDesc": "Automatic generation of PDF reports",
     "medicalTracking": "Medical Tracking",
     "medicalTrackingDesc": "Track patient progress in real-time",
     "completeHistory": "Complete History",
-    "completeHistoryDesc": "Complete access to assessment and treatment history",
+    "completeHistoryDesc": "Access to assessment and treatment history",
+    "featuresTitle": "Key Features",
     "getStarted": "Get Started",
-    "login": "Login"
+    "login": "Login",
+    "readyTitle": "Ready to start?",
+    "getStartedShort": "Get Started",
+    "readySubtitle": "Join healthcare professionals who trust Heal+"
   },
   "auth": {
     "login": "Login",
@@ -234,6 +238,15 @@
     "download": "Download PDF",
     "view": "View"
   },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "q1": "Does Heal+ perform automatic wound analysis?",
+    "a1": "Yes. We use AI technology to assist in analysis and report generation.",
+    "q2": "Can I export reports in PDF?",
+    "a2": "Yes. You can generate and download detailed reports directly from the platform.",
+    "q3": "How does patient tracking work?",
+    "a3": "You can monitor progress in real-time, record assessments, and access complete history."
+  },
   "messages": {
     "success": "Operation completed successfully!",
     "error": "An error occurred. Please try again.",
@@ -245,5 +258,21 @@
     "requiredFields": "Please fill in all required fields.",
     "invalidEmail": "Invalid email.",
     "passwordTooShort": "Password must be at least 6 characters long."
+  },
+  "footer": {
+    "contact": "Contact",
+    "navigation": "Navigation",
+    "connect": "Connect",
+    "home": "Home",
+    "resources": "Resources",
+    "testimonials": "Testimonials",
+    "faqShort": "FAQ",
+    "followUpdates": "Follow us for updates",
+    "terms": "Terms of Use",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "accessibility": "Accessibility",
+    "references": "References",
+    "allRightsReserved": "All rights reserved."
   }
 }

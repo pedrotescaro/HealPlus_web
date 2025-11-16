@@ -21,13 +21,17 @@
     "aiAnalysis": "Análise com IA",
     "aiAnalysisDesc": "Tecnologia de inteligência artificial para análise precisa de feridas",
     "autoReports": "Relatórios Automáticos",
-    "autoReportsDesc": "Geração automática de relatórios detalhados em PDF",
+    "autoReportsDesc": "Geração automática de relatórios PDF",
     "medicalTracking": "Acompanhamento Médico",
     "medicalTrackingDesc": "Acompanhe a evolução dos pacientes em tempo real",
     "completeHistory": "Histórico Completo",
     "completeHistoryDesc": "Acesso completo ao histórico de avaliações e tratamentos",
+    "featuresTitle": "Principais Recursos",
     "getStarted": "Começar Agora",
-    "login": "Entrar"
+    "login": "Entrar",
+    "readyTitle": "Pronto para começar?",
+    "getStartedShort": "Comece Agora",
+    "readySubtitle": "Junte-se a profissionais de saúde que confiam no Heal+"
   },
   "auth": {
     "login": "Login",
@@ -234,6 +238,15 @@
     "download": "Baixar PDF",
     "view": "Visualizar"
   },
+  "faq": {
+    "title": "Perguntas Frequentes",
+    "q1": "O Heal+ realiza análise automática de feridas?",
+    "a1": "Sim. Utilizamos tecnologia de IA para auxiliar na análise e geração de relatórios.",
+    "q2": "Posso exportar relatórios em PDF?",
+    "a2": "Sim. É possível gerar e baixar relatórios detalhados diretamente na plataforma.",
+    "q3": "Como funciona o acompanhamento dos pacientes?",
+    "a3": "Você pode acompanhar a evolução em tempo real, registrar avaliações e acessar o histórico completo."
+  },
   "messages": {
     "success": "Operação realizada com sucesso!",
     "error": "Ocorreu um erro. Tente novamente.",
@@ -245,5 +258,21 @@
     "requiredFields": "Por favor, preencha todos os campos obrigatórios.",
     "invalidEmail": "Email inválido.",
     "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
+  },
+  "footer": {
+    "contact": "Contato",
+    "navigation": "Navegação",
+    "connect": "Conecte-se",
+    "home": "Home",
+    "resources": "Recursos",
+    "testimonials": "Depoimentos",
+    "faqShort": "Perguntas Frequentes",
+    "followUpdates": "Siga-nos para atualizações",
+    "terms": "Termos de Uso",
+    "privacy": "Privacidade",
+    "cookies": "Cookies",
+    "accessibility": "Acessibilidade",
+    "references": "Referências",
+    "allRightsReserved": "Todos os direitos reservados."
   }
 }

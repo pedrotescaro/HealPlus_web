@@ -3,104 +3,65 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 220 93% 95%;
-    --foreground: 222 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 4.9%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 20% 65.1%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91.4%;
-    --input: 214 32% 91.4%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 222 47% 11.2%;
-    --chart-3: 215 20% 65.1%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --font-scale: 1.0;
-  }
-
-  .dark {
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65.1%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 210 40% 98%;
-    --chart-3: 215 20% 65.1%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-
-  [data-theme="high-contrast"] {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 60 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 80%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 0%;
-    --border: 0 0% 40%;
-    --input: 0 0% 10%;
-    --ring: 60 100% 50%;
-  }
-
+  /* Fundo e cores de texto padrão para suportar Dark Mode */
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
   }
 }
 
+/* Animação de pulso (mantida) */
+.pulse-slow {
+  animation: pulseScaleOpacity 8s ease-in-out infinite;
+}
+.pulse-medium {
+  animation: pulseScaleOpacity 6s ease-in-out infinite;
+}
+.pulse-fast {
+  animation: pulseScaleOpacity 4s ease-in-out infinite;
+}
+@keyframes pulseScaleOpacity {
+  0% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.15); opacity: 0.25; }
+  100% { transform: scale(1); opacity: 0.1; }
+}
+
 @layer components {
-  .btn-primary {
-    @apply bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-  }
-  
-  .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
-  }
-  
+  /* Estilo do Card base (melhorado com borda sutil) */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700;
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700;
+  }
+
+  /* Botão Primário */
+  .btn-primary {
+    @apply bg-primary-700 hover:bg-primary-800 text-white font-semibold py-2 px-4 rounded-lg 
+      transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed 
+      focus:ring-4 focus:ring-primary-500 focus:ring-opacity-50;
+  }
+  
+  /* Botão Secundário */
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 
+      font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  /* Botão de Ação Rápida (para o Quick Actions Grid) */
+  .btn-action-card {
+    @apply flex flex-col items-center justify-center text-center p-6 bg-gray-100 dark:bg-gray-700 
+      rounded-xl shadow-md hover:shadow-lg transition-all duration-200 
+      hover:bg-primary-50 dark:hover:bg-gray-600 
+      text-gray-900 dark:text-gray-100 font-semibold
+      border border-gray-200 dark:border-gray-600;
+  }
+  /* Estilo do ícone dentro do botão de ação */
+  .btn-action-card svg {
+    @apply w-8 h-8 mb-2 text-primary-600 dark:text-primary-400; /* Destaque no ícone */
+  }
+
+  /* Campo de Input */
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+      focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-800 
+      text-gray-900 dark:text-gray-100 placeholder-gray-400;
   }
 }
 
