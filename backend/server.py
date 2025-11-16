@@ -1,5 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, File, UploadFile, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
+from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -39,6 +41,19 @@ JWT_EXPIRATION_HOURS = int(os.environ.get('JWT_EXPIRATION_HOURS', '168'))
 # Create the main app
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+# OAuth Configuration
+oauth = OAuth()
+oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
 security = HTTPBearer()
 
 # ==================== MODELS ====================
@@ -173,6 +188,51 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail='Invalid token')
 
 # ==================== AUTH ROUTES ====================
+
+@api_router.get('/auth/login/google')
+async def login_google(request: Request):
+    redirect_uri = request.url_for('auth_google')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@api_router.get('/auth/google/callback', name='auth_google', include_in_schema=False)
+async def auth_google(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Could not fetch user info from Google")
+
+    email = user_info.get('email')
+    name = user_info.get('name')
+
+    # Check if user exists
+    user_doc = await db.users.find_one({'email': email}, {'_id': 0})
+    
+    if user_doc:
+        # User exists, log them in
+        user = User(**{k: v for k, v in user_doc.items() if k != 'password'})
+        jwt_token = create_token(user.id)
+    else:
+        # User does not exist, create a new one
+        user = User(
+            email=email,
+            name=name,
+            role='professional' # Default role
+        )
+        user_dict = user.model_dump()
+        # For social logins, we don't have a password. We can store a placeholder or leave it empty.
+        user_dict['password'] = hash_password(str(uuid.uuid4())) # Store a random, unusable password
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        
+        await db.users.insert_one(user_dict)
+        jwt_token = create_token(user.id)
+
+    # Redirect user to the frontend with the token
+    # The frontend will be responsible for storing the token and redirecting to the dashboard
+    frontend_url = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')[0]
+    response = RedirectResponse(url=f"{frontend_url}/auth/callback?token={jwt_token}")
+    return response
+
 
 @api_router.post('/auth/register', response_model=TokenResponse)
 async def register(user_data: UserCreate):

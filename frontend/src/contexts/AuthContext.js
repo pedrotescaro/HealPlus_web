@@ -57,12 +57,27 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
+  const handleSocialAuth = async (token) => {
+    try {
+      localStorage.setItem('token', token);
+      const userData = await authService.getMe(token);
+      setUser(userData);
+      setToken(token);
+    } catch (error) {
+      console.error('Social auth error:', error);
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
+      throw error; // Re-throw to be caught by the callback page
+    }
+  };
+
   const updateUser = (userData) => {
     setUser(prev => ({ ...prev, ...userData }));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, updateUser }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, updateUser, handleSocialAuth }}>
       {children}
     </AuthContext.Provider>
   );

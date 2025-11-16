@@ -65,9 +65,12 @@ const LoginPage = () => {
 
   // Função fictícia para login social
   const handleSocialLogin = (provider) => {
-    // console.log(`Iniciando login com ${provider}`);
-    // Implementar a lógica real (e.g., redirecionar para endpoint OAuth)
-    setError(t('messages.socialLoginNotImplemented', { provider }));
+    if (provider === 'Google') {
+      // Redirect to backend Google login endpoint
+      window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000'}/api/auth/login/google`;
+    } else {
+      setError(t('messages.socialLoginNotImplemented', { provider }));
+    }
   };
 
   // --- Renderização do Componente ---
