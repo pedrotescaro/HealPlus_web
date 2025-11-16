@@ -165,6 +165,14 @@ GOOGLE_GENAI_KEY=sua_chave_google_genai
 
 # CORS
 CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# Social Login
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+MICROSOFT_CLIENT_ID=your_microsoft_client_id
+MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
+APPLE_CLIENT_ID=your_apple_client_id
+APPLE_CLIENT_SECRET=your_apple_client_secret
 ```
 
 ### Frontend
@@ -741,7 +749,7 @@ export default MyComponent;
 
 ## 📈 Próximos Passos
 
-- [ ] Autenticação com redes sociais (Google, GitHub)
+- [x] Autenticação com redes sociais (Google, Microsoft, Apple)
 - [ ] Integração com Twilio para SMS
 - [ ] Notificações push em tempo real
 - [ ] Analytics avançado

@@ -65,9 +65,14 @@ const LoginPage = () => {
 
   // Função fictícia para login social
   const handleSocialLogin = (provider) => {
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+    
     if (provider === 'Google') {
-      // Redirect to backend Google login endpoint
-      window.location.href = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000'}/api/auth/login/google`;
+      window.location.href = `${backendUrl}/api/auth/login/google`;
+    } else if (provider === 'Microsoft') {
+      window.location.href = `${backendUrl}/api/auth/login/microsoft`;
+    } else if (provider === 'Apple') {
+      window.location.href = `${backendUrl}/api/auth/login/apple`;
     } else {
       setError(t('messages.socialLoginNotImplemented', { provider }));
     }

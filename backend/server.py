@@ -54,6 +54,28 @@ oauth.register(
     }
 )
 
+oauth.register(
+    name='microsoft',
+    server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
+    client_id=os.environ.get('MICROSOFT_CLIENT_ID'),
+    client_secret=os.environ.get('MICROSOFT_CLIENT_SECRET'),
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+oauth.register(
+    name='apple',
+    server_metadata_url='https://appleid.apple.com/.well-known/openid-configuration',
+    client_id=os.environ.get('APPLE_CLIENT_ID'),
+    client_secret=os.environ.get('APPLE_CLIENT_SECRET'),
+    client_kwargs={
+        'scope': 'openid email profile name',
+        'response_type': 'code id_token',
+        'response_mode': 'form_post',
+    }
+)
+
 security = HTTPBearer()
 
 # ==================== MODELS ====================
@@ -232,6 +254,94 @@ async def auth_google(request: Request):
     frontend_url = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')[0]
     response = RedirectResponse(url=f"{frontend_url}/auth/callback?token={jwt_token}")
     return response
+
+@api_router.get('/auth/login/microsoft')
+async def login_microsoft(request: Request):
+    redirect_uri = request.url_for('auth_microsoft')
+    return await oauth.microsoft.authorize_redirect(request, redirect_uri)
+
+@api_router.get('/auth/microsoft/callback', name='auth_microsoft', include_in_schema=False)
+async def auth_microsoft(request: Request):
+    token = await oauth.microsoft.authorize_access_token(request)
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Could not fetch user info from Microsoft")
+
+    email = user_info.get('email')
+    name = user_info.get('name')
+
+    # Check if user exists
+    user_doc = await db.users.find_one({'email': email}, {'_id': 0})
+    
+    if user_doc:
+        # User exists, log them in
+        user = User(**{k: v for k, v in user_doc.items() if k != 'password'})
+        jwt_token = create_token(user.id)
+    else:
+        # User does not exist, create a new one
+        user = User(
+            email=email,
+            name=name,
+            role='professional' # Default role
+        )
+        user_dict = user.model_dump()
+        user_dict['password'] = hash_password(str(uuid.uuid4()))
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        
+        await db.users.insert_one(user_dict)
+        jwt_token = create_token(user.id)
+
+    frontend_url = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')[0]
+    response = RedirectResponse(url=f"{frontend_url}/auth/callback?token={jwt_token}")
+    return response
+
+@api_router.get('/auth/login/apple')
+async def login_apple(request: Request):
+    redirect_uri = request.url_for('auth_apple')
+    return await oauth.apple.authorize_redirect(request, redirect_uri)
+
+@api_router.post('/auth/apple/callback', name='auth_apple', include_in_schema=False)
+async def auth_apple(request: Request):
+    token = await oauth.apple.authorize_access_token(request)
+    user_info = token.get('userinfo')
+    
+    if not user_info:
+        # Fallback for Apple that may not return userinfo directly
+        id_token = token.get('id_token')
+        if id_token:
+            user_info = await oauth.apple.parse_id_token(token)
+        else:
+            raise HTTPException(status_code=400, detail="Could not fetch user info from Apple")
+
+    email = user_info.get('email')
+    name = user_info.get('name') or email.split('@')[0] # Apple may not provide name
+
+    # Check if user exists
+    user_doc = await db.users.find_one({'email': email}, {'_id': 0})
+    
+    if user_doc:
+        # User exists, log them in
+        user = User(**{k: v for k, v in user_doc.items() if k != 'password'})
+        jwt_token = create_token(user.id)
+    else:
+        # User does not exist, create a new one
+        user = User(
+            email=email,
+            name=name,
+            role='professional' # Default role
+        )
+        user_dict = user.model_dump()
+        user_dict['password'] = hash_password(str(uuid.uuid4()))
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        
+        await db.users.insert_one(user_dict)
+        jwt_token = create_token(user.id)
+
+    frontend_url = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')[0]
+    response = RedirectResponse(url=f"{frontend_url}/auth/callback?token={jwt_token}")
+    return response
+
 
 
 @api_router.post('/auth/register', response_model=TokenResponse)
