@@ -3,7 +3,7 @@ Módulo para integração com múltiplas APIs de IA
 Suporta: OpenAI, Google Gemini, Anthropic Claude, e LLaMA
 """
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 import json
 
 # OpenAI
@@ -11,20 +11,20 @@ try:
     import openai
     from openai import OpenAI as OpenAIClient
 except ImportError:
-    openai = None
-    OpenAIClient = None
+    openai = None  # type: ignore
+    OpenAIClient = None  # type: ignore
 
 # Anthropic Claude
 try:
     import anthropic
 except ImportError:
-    anthropic = None
+    anthropic = None  # type: ignore
 
 # Google Gemini
 try:
     import google.generativeai as genai
 except ImportError:
-    genai = None
+    genai = None  # type: ignore
 
 
 class AIProvider:
@@ -151,7 +151,7 @@ class GeminiProvider(AIProvider):
         """Analisa ferida usando Gemini"""
         try:
             import base64
-            from PIL import Image
+            from PIL import Image  # type: ignore
             from io import BytesIO
             
             # Converter base64 para imagem
@@ -181,7 +181,7 @@ class LLaMAProvider(AIProvider):
     async def analyze_wound(self, image_base64: str, prompt: str) -> Dict[str, Any]:
         """Analisa ferida usando LLaMA"""
         try:
-            import httpx
+            import httpx  # type: ignore
             
             payload = {
                 "prompt": prompt,
