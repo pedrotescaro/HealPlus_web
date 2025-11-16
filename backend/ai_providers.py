@@ -45,6 +45,8 @@ class OpenAIProvider(AIProvider):
         api_key = api_key or os.environ.get('OPENAI_API_KEY')
         if not api_key:
             raise ValueError("OpenAI API key not provided")
+        if not OpenAIClient:
+            raise ImportError("openai package not installed")
         super().__init__(api_key)
         self.client = OpenAIClient(api_key=api_key)
 
@@ -74,6 +76,8 @@ class OpenAIProvider(AIProvider):
             )
             
             response_text = response.choices[0].message.content
+            if not response_text:
+                return {"raw_response": "No response from OpenAI"}
             
             # Tentar fazer parse como JSON
             try:
@@ -123,7 +127,13 @@ class ClaudeProvider(AIProvider):
                 ]
             )
             
-            response_text = message.content[0].text
+            # Get text from the first content block if it has a text attribute
+            response_text = ""
+            if message.content and hasattr(message.content[0], 'text'):
+                response_text = message.content[0].text  # type: ignore
+            
+            if not response_text:
+                return {"raw_response": "No response from Claude"}
             
             # Tentar fazer parse como JSON
             try:
@@ -174,7 +184,9 @@ class LLaMAProvider(AIProvider):
     """Provedor LLaMA (pode ser self-hosted ou via API)"""
     
     def __init__(self, api_key: Optional[str] = None, endpoint: Optional[str] = None):
-        api_key = api_key or os.environ.get('LLAMA_API_KEY')
+        api_key = api_key or os.environ.get('LLAMA_API_KEY') or ""
+        if not api_key:
+            raise ValueError("LLaMA API key not provided")
         self.endpoint = endpoint or os.environ.get('LLAMA_ENDPOINT', 'http://localhost:8001')
         super().__init__(api_key)
 

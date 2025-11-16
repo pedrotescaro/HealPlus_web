@@ -255,9 +255,11 @@ async def get_patient(patient_id: str, current_user: dict = Depends(get_current_
 @api_router.post('/wounds/analyze', response_model=WoundAnalysis)
 async def analyze_wound(data: WoundAnalysisCreate, current_user: dict = Depends(get_current_user)):
     try:
-        # Initialize Gemini
-        genai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        # Initialize Gemini using public API
+        from google import generativeai  # type: ignore
+        
+        generativeai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))  # type: ignore
+        model = generativeai.GenerativeModel('gemini-2.0-flash')  # type: ignore
         
         # Convert base64 image for Gemini
         image_data = base64.b64decode(data.image_base64.split(',')[1] if ',' in data.image_base64 else data.image_base64)
@@ -418,9 +420,11 @@ async def chat_with_zelo(data: ChatMessageCreate, current_user: dict = Depends(g
     session_id = data.session_id or str(uuid.uuid4())
     
     try:
-        # Initialize Gemini
-        genai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        # Initialize Gemini using public API
+        from google import generativeai  # type: ignore
+        
+        generativeai.configure(api_key=os.environ.get('GOOGLE_GENAI_KEY'))  # type: ignore
+        model = generativeai.GenerativeModel('gemini-2.0-flash')  # type: ignore
         
         system_prompt = "You are Zelo, an intelligent medical assistant specializing in wound care. Provide helpful, evidence-based advice while reminding users to consult healthcare professionals for diagnosis and treatment."
         response = model.generate_content(f"{system_prompt}\n\nUser: {data.message}")

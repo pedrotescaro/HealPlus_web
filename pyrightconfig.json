@@ -6,6 +6,7 @@
   "reportMissingTypeStubs": false,
   "reportOptionalMemberAccess": false,
   "reportOptionalSubscript": false,
+  "reportPrivateImportUsage": false,
   "reportGeneralTypeIssues": true,
   "ignore": [
     ".venv",
