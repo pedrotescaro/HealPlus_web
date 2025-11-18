@@ -1,62 +1,47 @@
-# 🏥 HealPlus - Sistema Inteligente de Análise de Feridas
+<div align="center">
 
-> Uma plataforma web avançada que utiliza Inteligência Artificial para análise automática de feridas, seguindo o protocolo TIMERS, com suporte a geração de relatórios e agendamento de consultas.
+# 🏥 Heal+ - Plataforma de Gestão e Análise de Feridas
 
-![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Python](https://img.shields.io/badge/Python-3.10+-3776ab?logo=python)
-![React](https://img.shields.io/badge/React-18.2.0-61dafb?logo=react)
+![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
+![Java](https://img.shields.io/badge/Java-17-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
----
+**A plataforma inteligente para gestão e análise de feridas com tecnologia de ponta**
 
-## 📋 Índice
+[🚀 Funcionalidades](#-funcionalidades) • [⚙️ Instalação](#-instalação) • [🔧 Tecnologias](#-tecnologias) • [📂 Estrutura](#-estrutura-do-projeto)
 
-- [Características](#características)
-- [Arquitetura](#arquitetura)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Uso](#uso)
-- [API](#api)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Tecnologias](#tecnologias)
-- [Contribuindo](#contribuindo)
-- [Licença](#licença)
+</div>
 
 ---
 
-## ✨ Características
+## 📋 Sobre o Projeto
 
-### 🤖 Análise com IA
-- **Análise de Imagens**: Utiliza Google Gemini 2.0 para análise detalhada de feridas
-- **Protocolo TIMERS**: Avaliação estruturada com:
-  - **T**issue (Tipo de tecido)
-  - **I**nfection/Inflammation (Infecção/Inflamação)
-  - **M**oisture (Nível de umidade)
-  - **E**dge (Status das bordas)
-  - **R**eiteration (Reavaliação)
-  - **S**ocial factors (Fatores sociais)
+O **Heal+** é uma plataforma web moderna com backend em **Spring Boot** e frontend em **React**, que oferece uma solução completa para profissionais de saúde gerenciarem e analisarem feridas de pacientes. Com suporte a **TIMERS**, **relatórios PDF**, **agenda** e **chat**, a solução é containerizada com **Docker** e utiliza **PostgreSQL** (entidades principais) e **MongoDB** (documentos analíticos).
 
-### 📊 Relatórios Automatizados
-- Geração de relatórios em PDF com análise completa
-- Histórico de avaliações por paciente
-- Recomendações terapêuticas baseadas em IA
+---
 
-### 📅 Gestão de Pacientes
-- Cadastro completo de pacientes
-- Histórico de feridas e análises
-- Agendamento de consultas
-- Autenticação segura com JWT
+## ✨ Funcionalidades
 
-### 💬 Chat com IA
-- Assistente "Zelo" para orientações sobre cuidados com feridas
-- Respostas baseadas em conhecimento médico
-- Histórico de conversas por sessão
+### 🎯 Principais Recursos
 
-### 📈 Dashboard Analítico
-- Estatísticas de pacientes e análises
-- Próximas consultas agendadas
-- Visão geral do trabalho realizado
+| Funcionalidade | Descrição |
+|--------------|-----------|
+| 🤖 Análise | Persistência da análise de ferida com TIMERS |
+| 📊 Relatórios | Geração de relatórios PDF a partir das análises |
+| 👨‍⚕️ Pacientes | Cadastro e listagem de pacientes |
+| 🗓️ Agenda | Agendamentos e visualização no dashboard |
+| 🔐 Autenticação | JWT com expiração, senha com BCrypt |
+| 💬 Chat | Histórico de mensagens por sessão |
+
+### 📝 Sistema de Avaliação TIMERS
+
+- Tecido, Infecção, Umidade, Bordas, Reparo, Social
+- Registro de dimensões e observações clínicas
 
 ---
 
@@ -64,148 +49,67 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (React)                      │
+│                    FRONTEND (React + Nginx)             │
 │         Components, Pages, Services, Contextos           │
-└────────────┬──────────────────────────────────┬──────────┘
-             │                                  │
-         HTTP/CORS                          WebSocket
-             │                                  │
-┌────────────▼──────────────────────────────────▼──────────┐
-│                    BACKEND (FastAPI)                     │
-│    Auth | Patients | Wounds | Reports | Chat | Appts    │
-└────────────┬──────────────────────────────────┬──────────┘
-             │                                  │
-             │                              Services
-             │                            Google Gemini
-             │                          Emergent LLM API
-┌────────────▼──────────────────────────────────────────────┐
-│               DATABASE (MongoDB)                          │
-│    Users | Patients | Wounds | Reports | Messages        │
-└─────────────────────────────────────────────────────────┘
+└────────────┬────────────────────────────────────────────┘
+             │
+             │ HTTP (Nginx proxy /api → backend:8080)
+             │
+┌────────────▼────────────────────────────────────────────┐
+│              BACKEND (Spring Boot 3, Java 17)           │
+│  Auth | Patients | Wounds | Reports | Chat | Appoints   │
+└────────────┬────────────────────────────────────────────┘
+             │
+      ┌──────┴─────────┐
+      │                │
+┌─────▼───────┐  ┌─────▼────────────────────────┐
+│ PostgreSQL  │  │ MongoDB                       │
+│ Users,      │  │ WoundAnalysis, Reports, Chat │
+│ Patients,   │  │                                │
+│ Appointments│  │                                │
+└─────────────┘  └────────────────────────────────┘
 ```
-
----
-
-## 📦 Pré-requisitos
-
-### Backend
-- Python 3.10+
-- MongoDB (local ou Atlas)
-- Conta no Google Cloud (para Gemini API)
-- Chave de API da Emergent Integrations
-
-### Frontend
-- Node.js 16+
-- npm ou yarn
 
 ---
 
 ## 🚀 Instalação
 
-### 1. Clone o repositório
+### Pré-requisitos
+
+- Docker e Docker Compose
+- Node.js 18+ (para desenvolvimento do frontend)
+- JDK 17 (para rodar local sem Docker)
+
+### Com Docker (recomendado)
 
 ```bash
 git clone https://github.com/pedrotescaro/HealPlus_web.git
 cd HealPlus_web
+docker-compose up -d
 ```
 
-### 2. Setup do Backend
+- Frontend: `http://localhost`
+- API: `http://localhost/api` (via Nginx → backend:8080)
+
+### Local (sem Docker)
 
 ```bash
-# Navegue até o diretório backend
-cd backend
+# Backend
+mvn -f backend/pom.xml spring-boot:run
 
-# Crie um ambiente virtual
-python -m venv venv
-
-# Ative o ambiente virtual
-# No Windows:
-venv\Scripts\activate
-# No macOS/Linux:
-source venv/bin/activate
-
-# Instale as dependências
-pip install -r requirements.txt
+# Frontend
+cd frontend && npm install && npm start
 ```
 
-### 3. Setup do Frontend
+Configure variáveis através de `application.yml` ou env:
 
-```bash
-# Navegue até o diretório frontend
-cd frontend
-
-# Instale as dependências
-npm install
-
-# Ou com yarn
-yarn install
 ```
-
----
-
-## ⚙️ Configuração
-
-### Backend
-
-Crie um arquivo `.env` no diretório `backend/`:
-
-```env
-# Database
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=heal_plus_db
-
-# JWT
-JWT_SECRET=sua_chave_secreta_muito_segura_aqui
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_HOURS=168
-
-# APIs
-EMERGENT_LLM_KEY=sua_chave_api_emergent
-GOOGLE_GENAI_KEY=sua_chave_google_genai
-
-# CORS
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-
-# Social Login
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-MICROSOFT_CLIENT_ID=your_microsoft_client_id
-MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
-APPLE_CLIENT_ID=your_apple_client_id
-APPLE_CLIENT_SECRET=your_apple_client_secret
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/heal_plus_db
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=postgres
+SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/heal_plus_db
+JWT_SECRET=uma_chave_segura
 ```
-
-### Frontend
-
-Crie um arquivo `.env.local` no diretório `frontend/`:
-
-```env
-REACT_APP_BACKEND_URL=http://localhost:8000
-```
-
----
-
-## 📖 Uso
-
-### Iniciar o Backend
-
-```bash
-cd backend
-python -m uvicorn server:app --reload
-```
-
-O servidor estará disponível em `http://localhost:8000`
-
-**Documentação Interativa**: http://localhost:8000/docs
-
-### Iniciar o Frontend
-
-```bash
-cd frontend
-npm start
-```
-
-A aplicação estará disponível em `http://localhost:3000`
 
 ---
 
@@ -246,7 +150,7 @@ Content-Type: application/json
     "email": "usuario@example.com",
     "name": "Nome Completo",
     "role": "professional",
-    "created_at": "2025-11-15T10:30:00Z"
+    "createdAt": "2025-11-15T10:30:00Z"
   }
 }
 ```
@@ -288,9 +192,9 @@ Authorization: Bearer {token}
 Content-Type: application/json
 
 {
-  "patient_id": "uuid",
-  "image_base64": "data:image/jpeg;base64,...",
-  "timers_data": {
+  "patientId": "uuid",
+  "imageBase64": "data:image/jpeg;base64,...",
+  "timersData": {
     "tissue_type": "granulation_with_slough",
     "infection_signs": ["redness", "warmth"],
     "moisture_level": "moderate",
@@ -334,7 +238,7 @@ Content-Type: application/json
 
 {
   "message": "Qual é o melhor curativo para feridas com umidade moderada?",
-  "session_id": "uuid_opcional"
+  "sessionId": "uuid_opcional"
 }
 ```
 
@@ -352,24 +256,6 @@ GET /api/dashboard/stats
 Authorization: Bearer {token}
 ```
 
-**Resposta**:
-```json
-{
-  "total_patients": 12,
-  "total_analyses": 45,
-  "total_reports": 38,
-  "upcoming_appointments": [
-    {
-      "id": "uuid",
-      "patient_id": "uuid",
-      "scheduled_date": "2025-11-20T14:30:00Z",
-      "notes": "Avaliação de ferida crônica",
-      "status": "scheduled"
-    }
-  ]
-}
-```
-
 ---
 
 ## 📁 Estrutura do Projeto
@@ -377,47 +263,40 @@ Authorization: Bearer {token}
 ```
 HealPlus_web/
 ├── backend/
-│   ├── server.py              # Aplicação FastAPI principal
-│   ├── requirements.txt        # Dependências Python
-│   └── .env                   # Variáveis de ambiente
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/com/healplus/
+│       │   ├── HealPlusApplication.java
+│       │   ├── config/ (Security/CORS)
+│       │   ├── controllers/ (REST /api/*)
+│       │   ├── entities/ (JPA - Postgres)
+│       │   ├── documents/ (Mongo)
+│       │   ├── repositories/ (JPA/Mongo)
+│       │   └── security/ (JWT)
+│       └── main/resources/application.yml
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── App.js             # Componente raiz
-│   │   ├── index.js           # Entry point
-│   │   ├── index.css          # Estilos globais
+│   │   ├── App.js
+│   │   ├── index.js
+│   │   ├── index.css
 │   │   ├── components/
-│   │   │   ├── Layout.js
-│   │   │   ├── Navbar.js
-│   │   │   ├── ProtectedRoute.js
-│   │   │   └── Sidebar.js
 │   │   ├── contexts/
-│   │   │   ├── AuthContext.js
-│   │   │   └── SettingsContext.js
 │   │   ├── pages/
-│   │   │   ├── DashboardPage.js
-│   │   │   ├── LandingPage.js
-│   │   │   ├── LoginPage.js
-│   │   │   ├── PatientsPage.js
-│   │   │   └── RegisterPage.js
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   └── i18n/
-│   │       ├── config.js
-│   │       ├── en.json
-│   │       └── pt.json
+│   │   └── services/api.js
 │   ├── public/
-│   │   ├── index.html
-│   │   └── manifest.json
 │   ├── package.json
-│   ├── tailwind.config.js
-│   └── .env.local
+│   └── tailwind.config.js
 │
-├── tests/
-│   └── __init__.py
+├── .github/workflows/
+│   ├── tests.yml
+│   └── deploy.yml
 │
-├── README.md                  # Este arquivo
-└── .gitignore
+├── Dockerfile.backend
+├── Dockerfile.frontend
+├── docker-compose.yml
+├── nginx.conf
+└── README.md
 ```
 
 ---
@@ -425,36 +304,28 @@ HealPlus_web/
 ## 🛠️ Tecnologias
 
 ### Backend
-- **FastAPI** - Framework web assíncrono
-- **MongoDB** - Banco de dados NoSQL
-- **PyJWT** - Autenticação com tokens JWT
-- **Bcrypt** - Hash seguro de senhas
-- **Google Gemini API** - Análise de imagens com IA
-- **Emergent LLM** - Processamento de linguagem natural
-- **ReportLab** - Geração de relatórios em PDF
-- **Uvicorn** - Servidor ASGI
+- Spring Boot 3 (Web, Security, Validation)
+- Spring Data JPA (PostgreSQL)
+- Spring Data MongoDB
+- JJWT (JWT), BCrypt
+- PDFBox (relatórios PDF)
 
 ### Frontend
-- **React 18** - Biblioteca de UI
-- **React Router v6** - Roteamento
-- **Axios** - Cliente HTTP
-- **Tailwind CSS** - Estilização
-- **i18next** - Internacionalização (pt-BR, en-US)
-- **Craco** - Configuração do CRA sem ejetar
+- React 18, React Router, Axios, Tailwind CSS
+- i18n (pt, en)
 
 ### Banco de Dados
-- **MongoDB** - Armazenamento de dados
-- **Motor** - Driver assíncrono para MongoDB
+- PostgreSQL (users, patients, appointments)
+- MongoDB (wound analyses, reports, chat)
 
 ---
 
 ## 🔒 Segurança
 
-- ✅ Autenticação JWT com tokens com expiração
-- ✅ Hashing de senhas com bcrypt
-- ✅ CORS configurável
-- ✅ Validação de dados com Pydantic
-- ✅ Variáveis de ambiente para dados sensíveis
+- JWT com expiração
+- Hashing de senhas (BCrypt)
+- CORS configurável
+- Validação com Bean Validation
 
 ---
 
@@ -463,24 +334,21 @@ HealPlus_web/
 ```
 1. Usuário se registra/faz login
    └─> Recebe token JWT
-   
+
 2. Cria novo paciente
-   └─> Salvo no banco de dados
-   
+   └─> Salvo no PostgreSQL
+
 3. Faz upload de foto da ferida
-   └─> Enviada para análise com IA
-   
-4. Sistema preenche dados TIMERS
-   └─> Gemini analisa a imagem
-   
-5. Relatório é gerado em PDF
-   └─> Disponível para download
-   
-6. Consulta é agendada
+   └─> Dados TIMERS persistidos no MongoDB
+
+4. Relatório é gerado em PDF
+   └─> Base64 retornado para download
+
+5. Consulta é agendada
    └─> Exibida no dashboard
-   
-7. Pode conversar com assistente "Zelo"
-   └─> Recebe orientações sobre cuidados
+
+6. Chat registra mensagens
+   └─> Histórico por sessão
 ```
 
 ---
@@ -491,7 +359,7 @@ Contribuições são bem-vindas! Por favor:
 
 1. Faça um Fork do projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+3. Commit suas mudanças (`git commit -m 'feat: nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
@@ -501,151 +369,42 @@ Contribuições são bem-vindas! Por favor:
 
 Para suporte, abra uma issue no repositório ou entre em contato através de:
 - 📧 Email: contato@healplus.com
-- 🐛 Issues: [GitHub Issues](https://github.com/pedrotescaro/HealPlus_web/issues)
+- 🐛 Issues: GitHub Issues
 
 ---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está licenciado sob a Licença MIT - veja o arquivo `LICENSE` para detalhes.
 
 ---
 
 ## 🙋 Autores
 
-- **Pedro Tescaro** - *Desenvolvedor Principal* - [@pedrotescaro](https://github.com/pedrotescaro)
+- Equipe Heal+
 
 ---
 
 ## 🙏 Agradecimentos
 
-- Google Gemini by Google AI
-- Emergent Integrations
 - Comunidade Open Source
+- PostgreSQL
 - MongoDB
-- FastAPI Community
+- Spring Boot Community
 
 ---
 
 ## 📊 Status do Projeto
 
-- [x] Backend API básica
+- [x] Backend Spring Boot
 - [x] Autenticação JWT
 - [x] Gestão de pacientes
-- [x] Análise com IA (Gemini)
-- [x] Geração de relatórios PDF
-- [x] Chat com IA
-- [x] Agendamento de consultas
-- [x] Frontend completo com componentes reutilizáveis
-- [x] Testes automatizados (Backend e Frontend)
-- [x] Deploy em produção (Docker & Docker Compose)
-- [x] Mobile responsivo (100% Tailwind CSS)
-- [x] Integração com múltiplas APIs de IA (OpenAI, Claude, Gemini, LLaMA)
+- [x] Relatórios PDF
+- [x] Chat (persistência)
+- [x] Agenda/Dashboard
+- [x] Frontend React com componentes reutilizáveis
+- [x] Docker & Docker Compose
 - [x] CI/CD com GitHub Actions
-- [x] Documentação completa
-
----
-
-## 🆕 Novidades Implementadas
-
-### 1️⃣ Frontend Completo
-
-**Componentes Reutilizáveis:**
-- ✅ Button (com variantes: primary, secondary, danger, success, outline)
-- ✅ Input (com validação e mensagens de erro)
-- ✅ Card (com hover effects)
-- ✅ Modal (com footer customizável)
-- ✅ Alert (info, success, warning, error)
-- ✅ Loading (spinner com animação)
-
-**Páginas Implementadas:**
-- ✅ LoginPage (com validação de email)
-- ✅ RegisterPage (com confirmação de senha)
-- ✅ DashboardPage (com estatísticas e ações rápidas)
-- ✅ PatientsPage (com busca e CRUD completo)
-
-### 2️⃣ Testes Automatizados
-
-**Backend:**
-- ✅ Testes de autenticação (registro, login, token)
-- ✅ Testes de pacientes (CRUD)
-- ✅ Testes de dashboard (estatísticas)
-- ✅ Framework: pytest com coverage
-
-**Frontend:**
-- ✅ Testes de componentes (Button, Input, Alert)
-- ✅ Testes de integração
-- ✅ Framework: Jest + React Testing Library
-
-**CI/CD:**
-- ✅ GitHub Actions para testes automáticos
-- ✅ Build automático de Docker images
-- ✅ Coverage reporting com Codecov
-
-### 3️⃣ Deploy em Produção
-
-**Docker:**
-- ✅ Dockerfile.backend (Python 3.10 slim)
-- ✅ Dockerfile.frontend (Node 18 + Nginx)
-- ✅ docker-compose.yml (ambiente desenvolvimento)
-- ✅ docker-compose.prod.yml (ambiente produção)
-
-**Infraestrutura:**
-- ✅ MongoDB com persistência de dados
-- ✅ Nginx reverse proxy
-- ✅ HTTPS/SSL com Let's Encrypt
-- ✅ Documentação PRODUCTION_DEPLOYMENT.md
-
-**CI/CD Pipeline:**
-- ✅ `.github/workflows/tests.yml` (testes automáticos)
-- ✅ `.github/workflows/deploy.yml` (deploy automático)
-
-### 4️⃣ Mobile Responsivo
-
-**Design:**
-- ✅ Mobile-first approach
-- ✅ Tailwind CSS breakpoints (xs, sm, md, lg, xl, 2xl)
-- ✅ 100% responsivo em todos os dispositivos
-
-**Componentes:**
-- ✅ Grids adaptáveis
-- ✅ Flexbox responsivo
-- ✅ Typography escalonável
-- ✅ Touch-friendly buttons (min 44x44px)
-
-**Documentação:**
-- ✅ MOBILE_RESPONSIVE.md com melhores práticas
-- ✅ Exemplos de componentes responsivos
-- ✅ Testes de responsividade
-
-### 5️⃣ Múltiplas APIs de IA
-
-**Suporte para:**
-- ✅ Google Gemini 2.0 (padrão)
-- ✅ OpenAI GPT-4 Vision
-- ✅ Anthropic Claude
-- ✅ LLaMA (self-hosted ou cloud)
-
-**Factory Pattern:**
-- ✅ `AIProviderFactory` para fácil alternância
-- ✅ Interface única para todos os provedores
-- ✅ Fallback automático
-
-**Arquivo:**
-- ✅ `backend/ai_providers.py` com implementação completa
-
----
-
-## 📚 Documentação Completa
-
-| Arquivo | Descrição |
-|---------|-----------|
-| `README.md` | Este arquivo - visão geral do projeto |
-| `PRODUCTION_DEPLOYMENT.md` | Guia completo de deploy em produção |
-| `MOBILE_RESPONSIVE.md` | Documentação de responsividade mobile |
-| `.github/workflows/` | Pipelines CI/CD |
-| `docker-compose.yml` | Configuração Docker desenvolvimento |
-| `docker-compose.prod.yml` | Configuração Docker produção |
 
 ---
 
@@ -654,117 +413,27 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 ### Desenvolvimento Local
 
 ```bash
-# Clone o repositório
-git clone https://github.com/pedrotescaro/HealPlus_web.git
-cd HealPlus_web
-
-# Inicie com Docker
 docker-compose up -d
 
-# Acesse
-# Frontend: http://localhost:3000
-# Backend: http://localhost:8000/docs
+# Frontend: http://localhost
+# API: http://localhost/api
+# PostgreSQL: localhost:5432
 # MongoDB: localhost:27017
 ```
 
 ### Production Deploy
 
 ```bash
-# Veja PRODUCTION_DEPLOYMENT.md para instruções detalhadas
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.yml up -d
 ```
 
 ### Rodar Testes
 
 ```bash
-# Backend
-cd backend && pytest tests/ -v
-
-# Frontend
+mvn -f backend/pom.xml test
 cd frontend && npm test
-
-# Coverage
-pytest --cov=. --cov-report=html
 ```
 
 ---
 
-## 💡 Exemplos de Uso
-
-### Usar Provider de IA Diferente
-
-```python
-# Em server.py
-from ai_providers import AIProviderFactory
-
-# Usar Claude ao invés de Gemini
-ai_provider = AIProviderFactory.create('claude')
-result = await ai_provider.analyze_wound(image_base64, prompt)
-
-# Ou OpenAI
-ai_provider = AIProviderFactory.create('openai')
-result = await ai_provider.analyze_wound(image_base64, prompt)
-```
-
-### Adicionar Novo Componente
-
-```jsx
-// frontend/src/components/MyComponent.js
-import Button from './Button';
-import Card from './Card';
-
-const MyComponent = () => (
-  <Card className="p-6">
-    <Button variant="primary">Clique</Button>
-  </Card>
-);
-
-export default MyComponent;
-```
-
----
-
-## 🔄 Fluxo de Desenvolvimento
-
-```
-1. Criar branch feature
-   git checkout -b feature/nova-funcionalidade
-
-2. Desenvolver e testar localmente
-   docker-compose up -d
-   npm test
-
-3. Commit com mensagem descritiva
-   git commit -m "feat: adiciona nova funcionalidade"
-
-4. Push e abrir Pull Request
-   git push origin feature/nova-funcionalidade
-
-5. GitHub Actions executa testes automaticamente
-
-6. Merge aprovado → Deploy automático em produção
-```
-
----
-
-## 📈 Próximos Passos
-
-- [x] Autenticação com redes sociais (Google, Microsoft, Apple)
-- [ ] Integração com Twilio para SMS
-- [ ] Notificações push em tempo real
-- [ ] Analytics avançado
-- [ ] App móvel nativa (React Native)
-- [ ] Integração com ElasticSearch
-- [ ] Redis para cache
-- [ ] Microserviços
-- [ ] Kubernetes deployment
-
----
-
----
-
-**Desenvolvido com ❤️ por [Pedro Tescaro](https://github.com/pedrotescaro)**
-
----
-
-*Última atualização: 15 de Novembro de 2025*
+**Desenvolvido com ❤️ pela equipe Heal+**
