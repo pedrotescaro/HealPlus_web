@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
@@ -15,6 +15,7 @@ const PatientsPage = () => {
   const { t } = useTranslation();
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -43,6 +44,12 @@ const PatientsPage = () => {
   useEffect(() => {
     loadPatients();
   }, [loadPatients]);
+
+  useEffect(() => {
+    if (location.state?.openNewPatientModal) {
+      setShowModal(true);
+    }
+  }, [location.state]);
 
   const validateForm = () => {
     const newErrors = {};

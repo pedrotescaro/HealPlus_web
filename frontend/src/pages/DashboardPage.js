@@ -124,7 +124,7 @@ const DashboardPage = () => {
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <button
-              onClick={() => navigate('/patients/new')}
+              onClick={() => navigate('/patients', { state: { openNewPatientModal: true } })}
               className="btn-action-card"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ const DashboardPage = () => {
               **{t('patients.addNew')}**
             </button>
             <button
-              onClick={() => navigate('/assessments/new')}
+              onClick={() => navigate('/assessments')}
               className="btn-action-card"
             >
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -4,6 +4,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import PatientsPage from "./pages/PatientsPage";
+import AssessmentsPage from "./pages/AssessmentsPage";
+import ChatPage from "./pages/ChatPage";
+import ReportsPage from "./pages/ReportsPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -29,6 +32,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <PatientsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assessments"
+            element={
+              <ProtectedRoute>
+                <AssessmentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportsPage />
               </ProtectedRoute>
             }
           />
