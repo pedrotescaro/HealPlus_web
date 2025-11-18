@@ -1,0 +1,22 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/heal_plus_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/heal_plus_db}
+jwt:
+  secret: ${JWT_SECRET:heal_plus_secret_key}
+  expirationHours: ${JWT_EXPIRATION_HOURS:168}
+cors:
+  origins: ${CORS_ORIGINS:http://localhost:3000}

@@ -1,24 +1,12 @@
-# Backend Dockerfile
-FROM python:3.10-slim
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /workspace
+COPY backend/pom.xml backend/pom.xml
+RUN mvn -f backend/pom.xml -q -DskipTests dependency:go-offline
+COPY backend/src backend/src
+RUN mvn -f backend/pom.xml -q -DskipTests package
 
+FROM eclipse-temurin:17-jre
 WORKDIR /app
-
-# Instalar dependências do sistema
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiar requirements
-COPY backend/requirements.txt .
-
-# Instalar dependências Python
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copiar código
-COPY backend/ .
-
-# Expor porta
-EXPOSE 8000
-
-# Comando para iniciar o servidor
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY --from=build /workspace/backend/target/backend.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar","/app/app.jar"]

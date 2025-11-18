@@ -40,7 +40,7 @@ jobs:
             git pull origin main
             docker-compose pull
             docker-compose up -d
-            docker-compose exec -T backend python -m alembic upgrade head || true
+            echo "No Python migrations. Spring Boot uses JPA auto DDL updates."
           EOF
           else
             echo "Deployment skipped: SSH credentials not configured"
