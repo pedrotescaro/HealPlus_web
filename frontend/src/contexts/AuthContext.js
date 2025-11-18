@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
+const DEMO_MODE = String(process.env.REACT_APP_DEMO_MODE).toLowerCase() === 'true';
+const DEMO_AUTOSIGNIN = String(process.env.REACT_APP_DEMO_AUTOSIGNIN).toLowerCase() === 'true';
 
 const AuthContext = createContext(null);
 
@@ -28,6 +30,15 @@ export const AuthProvider = ({ children }) => {
           console.error('Auth init error:', error);
           localStorage.removeItem('token');
           setToken(null);
+        }
+      } else if (DEMO_MODE && DEMO_AUTOSIGNIN) {
+        try {
+          const response = await authService.anonymousLogin();
+          setToken(response.token);
+          setUser(response.user);
+          localStorage.setItem('token', response.token);
+        } catch (_) {
+          // ignore
         }
       }
       setLoading(false);
@@ -76,8 +87,16 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => ({ ...prev, ...userData }));
   };
 
+  const loginAnonymous = async () => {
+    const response = await authService.anonymousLogin();
+    setToken(response.token);
+    setUser(response.user);
+    localStorage.setItem('token', response.token);
+    return response;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, updateUser, handleSocialAuth }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, updateUser, handleSocialAuth, loginAnonymous }}>
       {children}
     </AuthContext.Provider>
   );

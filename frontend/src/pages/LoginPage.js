@@ -12,7 +12,8 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react'; // Ícones
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, loginSocial } = useAuth(); // Presumindo uma função loginSocial
+  const { login, loginAnonymous } = useAuth();
+  const DEMO_MODE = String(process.env.REACT_APP_DEMO_MODE).toLowerCase() === 'true';
   
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -75,6 +76,19 @@ const LoginPage = () => {
       window.location.href = `${backendUrl}/api/auth/login/apple`;
     } else {
       setError(t('messages.socialLoginNotImplemented', { provider }));
+    }
+  };
+
+  const handleAnonymousLogin = async () => {
+    try {
+      setError('');
+      setLoading(true);
+      await loginAnonymous();
+      navigate('/dashboard');
+    } catch (err) {
+      setError(t('messages.error'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,6 +260,17 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
+
+          {DEMO_MODE && (
+            <Button
+              type="button"
+              onClick={handleAnonymousLogin}
+              className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white font-semibold py-2.5 rounded-lg transition-colors"
+              disabled={loading}
+            >
+              Entrar como visitante (modo demo)
+            </Button>
+          )}
 
           {/* Link para Cadastro */}
           <div className="mt-8 text-center">

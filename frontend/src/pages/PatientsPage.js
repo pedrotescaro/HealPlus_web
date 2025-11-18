@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,11 +29,7 @@ const PatientsPage = () => {
     contact: '',
   });
 
-  useEffect(() => {
-    loadPatients();
-  }, []);
-
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     try {
       const data = await patientService.getAll(token);
       setPatients(data);
@@ -42,7 +38,11 @@ const PatientsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadPatients();
+  }, [loadPatients]);
 
   const validateForm = () => {
     const newErrors = {};

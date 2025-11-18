@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import { dashboardService } from '../services/api';
+import { motion } from 'framer-motion';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -12,11 +13,7 @@ const DashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const data = await dashboardService.getStats(token);
       setStats(data);
@@ -25,7 +22,11 @@ const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const statCards = [
     {
@@ -78,21 +79,25 @@ const DashboardPage = () => {
     <Layout>
       <div className="space-y-8">
         {/* Welcome Section */}
-        <div>
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
             {t('dashboard.welcome')}, {user?.name}!
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Aqui está o resumo das suas atividades e acesso rápido às tarefas.
           </p>
-        </div>
+        </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {statCards.map((stat, index) => (
-            <div 
-              key={index} 
-              className="card transform hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-xl" // Adicionado hover e transição
+            <motion.div
+              key={index}
+              initial={{ scale: 0.95, opacity: 0, y: 30 }}
+              whileInView={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className="card transform hover:scale-[1.02] transition-all duration-300 cursor-pointer hover:shadow-xl"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -108,12 +113,12 @@ const DashboardPage = () => {
                   {stat.icon}
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="card">
+        <motion.div className="card" initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             Ações Rápidas
           </h2>
@@ -155,11 +160,11 @@ const DashboardPage = () => {
               **{t('reports.viewAll')}**
             </button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Upcoming Appointments */}
         {stats?.upcoming_appointments && stats.upcoming_appointments.length > 0 && (
-          <div className="card">
+          <motion.div className="card" initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }} viewport={{ once: true }}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               {t('dashboard.upcomingAppointments')}
             </h2>
@@ -186,7 +191,7 @@ const DashboardPage = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </div>
     </Layout>

@@ -12,7 +12,7 @@ import { Eye, EyeOff, ArrowLeft } from 'lucide-react'; // Ícones
 const RegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { register, loginSocial } = useAuth(); // Presumindo uma função loginSocial
+  const { register } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',

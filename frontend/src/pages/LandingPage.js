@@ -329,10 +329,10 @@ const LandingPage = () => {
               </h3>
               
               <div className="flex space-x-5 mb-3">
-                <a href="#" aria-label="Chat" className="text-gray-400 hover:text-white transition-colors duration-200"><MessageCircle className="w-6 h-6" /></a>
-                <a href="#" aria-label="LinkedIn" className="text-gray-400 hover:text-white transition-colors duration-200"><Linkedin className="w-6 h-6" /></a>
-                <a href="#" aria-label="YouTube" className="text-gray-400 hover:text-white transition-colors duration-200"><Youtube className="w-6 h-6" /></a>
-                <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-white transition-colors duration-200"><Instagram className="w-6 h-6" /></a>
+                <Link to="/chat" aria-label="Chat" className="text-gray-400 hover:text-white transition-colors duration-200"><MessageCircle className="w-6 h-6" /></Link>
+                <a href="https://www.linkedin.com/" aria-label="LinkedIn" className="text-gray-400 hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer"><Linkedin className="w-6 h-6" /></a>
+                <a href="https://www.youtube.com/" aria-label="YouTube" className="text-gray-400 hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer"><Youtube className="w-6 h-6" /></a>
+                <a href="https://www.instagram.com/" aria-label="Instagram" className="text-gray-400 hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer"><Instagram className="w-6 h-6" /></a>
               </div>
               
               <p className="text-sm text-gray-500 mt-2">
