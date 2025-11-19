@@ -38,6 +38,7 @@ O **Heal+** é uma plataforma web moderna e completa desenvolvida com **Spring B
 - 🗓️ **Agenda Integrada** com calendário e gestão de compromissos
 - 💬 **Chat Assistente** para suporte aos profissionais
 - 📱 **100% Responsivo** com design mobile-first
+- 📱 **App Mobile Nativo** React Native com Expo
 - 🔒 **Seguro** com autenticação JWT e validações
 
 ---
@@ -193,6 +194,31 @@ export REACT_APP_BACKEND_URL=http://localhost:8080
 # Execute
 npm start
 ```
+
+#### 📱 App Mobile
+
+```bash
+cd mobile
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente
+# Crie um arquivo .env com:
+# EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
+# ou use o IP da sua máquina para Android:
+# EXPO_PUBLIC_BACKEND_URL=http://192.168.1.XXX:8001
+
+# Inicie o servidor de desenvolvimento
+npm start
+
+# Execute no dispositivo:
+# - Android: Pressione 'a' ou escaneie o QR code com Expo Go
+# - iOS: Pressione 'i' ou escaneie o QR code com a câmera
+# - Web: Pressione 'w'
+```
+
+**Nota**: Para mais detalhes sobre o app mobile, consulte o [README do mobile](mobile/README.md).
 
 ---
 
@@ -412,6 +438,14 @@ Authorization: Bearer {token}
 - **date-fns** - Manipulação de datas
 - **i18next** - Internacionalização (pt/en)
 
+### Mobile
+- **React Native** - Framework mobile
+- **Expo** - Plataforma de desenvolvimento
+- **React Navigation** - Navegação entre telas
+- **Expo Image Picker** - Seleção de imagens
+- **Expo Camera** - Captura de fotos
+- **AsyncStorage** - Armazenamento local
+
 ### Banco de Dados
 - **PostgreSQL** - Dados relacionais (users, patients, appointments)
 - **MongoDB** - Documentos (wound analyses, reports, chat)
@@ -516,6 +550,28 @@ HealPlus_web/
 │           └── locales/
 │               ├── pt.json
 │               └── en.json
+│
+├── mobile/                          # App Mobile React Native
+│   ├── App.js
+│   ├── app.json
+│   ├── package.json
+│   └── src/
+│       ├── screens/
+│       │   ├── auth/
+│       │   │   ├── LoginScreen.js
+│       │   │   └── RegisterScreen.js
+│       │   └── main/
+│       │       ├── DashboardScreen.js
+│       │       ├── PatientsScreen.js
+│       │       ├── AssessmentsScreen.js
+│       │       ├── ChatScreen.js
+│       │       └── ReportsScreen.js
+│       ├── navigation/
+│       │   └── AppNavigator.js
+│       ├── contexts/
+│       │   └── AuthContext.js
+│       └── services/
+│           └── api.js
 │
 ├── docker-compose.yml
 ├── Dockerfile.backend

@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "HealPlus",
+    "slug": "healplus-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563eb"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healplus.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563eb"
+      },
+      "package": "com.healplus.mobile",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "A aplicação precisa acessar suas fotos para análise de feridas.",
+          "cameraPermission": "A aplicação precisa acessar sua câmera para capturar imagens de feridas."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "A aplicação precisa acessar sua câmera para capturar imagens de feridas."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "healplus-mobile"
+      }
+    }
+  }
+}
+
