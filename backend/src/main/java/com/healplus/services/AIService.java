@@ -145,19 +145,27 @@ public class AIService {
     
     private String buildImageAnalysisPrompt(String imageId, String captureDateTime) {
         return String.format("""
-            Analise esta imagem de ferida médica seguindo o protocolo TIMERS.
+            Você é uma enfermeira estomaterapeuta analisando uma imagem de ferida. Utilize o protocolo TIMERS e os mesmos critérios clínicos usados por enfermeiros especialistas para diferenciar etiologias.
             
             ID da Imagem: %s
             Data/Hora de Captura: %s
+            
+            Instruções específicas:
+            - Avalie se a lesão é: por pressão (estágio I-IV ou DTPI), vascular arterial, vascular venosa, diabética/neurotrófica, traumática, fungoide/fúngica, inflamatória ou outra. Sempre indique uma confiança (%) e a justificativa clínica (localização anatômica, profundidade, tipo de tecido, exsudato, bordas, pele perilesional, sinais de infecção).
+            - Para suspeita de lesão fúngica, procure por: placas/esfacelos branco-amarelados com bordas irregulares, halo eritematoso com pápulas satélites, maceração intensa, aspecto \"queimado\" ou com crostas escuras e padrão de crescimento radial.
+            - Para lesão por pressão, descreva: plano ósseo relacionado, estágio, presença de necrose/esfacelo, túnel, cavitação, bordas descoladas.
+            - Para lesões vasculares (arteriais/venosas), cite: coloração, edema, padrão de distribuição, presença de lipodermatoesclerose, temperatura e pulsos aparentes na pele.
             
             Forneça uma análise detalhada incluindo:
             1. Avaliação de qualidade da imagem (iluminação, foco, ângulo, fundo, escala de referência)
             2. Análise dimensional (área total afetada, dimensões da lesão principal)
             3. Análise colorimétrica (cores dominantes com percentuais)
             4. Análise de histograma (distribuição de cores)
-            5. Análise de textura e características (edema, descamação, brilho, bordas)
+            5. Análise de textura e características (edema, descamação, brilho, bordas, tecido de granulação, esfacelo, necrose, sinais de infecção, maceração perilesional)
+            6. Classificação etiológica diferenciando os tipos de ferida (fungal, pressão, vascular, diabética, traumática, etc.) com justificativa e fatores clínicos observados.
+            7. Recomendações de cuidados prioritários alinhadas à etiologia presumida.
             
-            Retorne a resposta em formato JSON estruturado.
+            Retorne a resposta em JSON estruturado usando chaves claras em português.
             """, imageId, captureDateTime);
     }
     
@@ -175,10 +183,10 @@ public class AIService {
             - Data/Hora: %s
             
             Forneça uma análise comparativa detalhada incluindo:
-            1. Análise individual de cada imagem (qualidade, dimensões, cores, textura)
-            2. Comparação quantitativa de progressão (variação de área, mudanças de coloração, evolução de edema e textura)
-            3. Resumo descritivo da evolução
-            4. Consistência dos dados entre as imagens
+            1. Análise individual de cada imagem (qualidade, dimensões, cores, textura, classificação etiológica diferenciando feridas fúngicas, por pressão, diabéticas, vasculares, etc.)
+            2. Comparação quantitativa de progressão (variação de área, mudanças de coloração, evolução de edema, tecido, bordas e pele perilesional)
+            3. Resumo descritivo da evolução destacando se houve mudança de etiologia provável ou agravamento (ex.: de colonização fúngica para infecção)
+            4. Consistência dos dados entre as imagens e fatores clínicos observados por enfermeiros (exsudato, odor, maceração, presença de necrose, pápulas satélites)
             
             Retorne a resposta em formato JSON estruturado.
             """, image1Id, image1DateTime, image2Id, image2DateTime);
@@ -204,6 +212,13 @@ public class AIService {
         dimensionalAnalysis.put("unidade_medida", "cm");
         dimensionalAnalysis.put("area_total_afetada", 0.0);
         analysis.put("analise_dimensional", dimensionalAnalysis);
+
+        Map<String, Object> etiologicClassification = new HashMap<>();
+        etiologicClassification.put("tipo_probabilistico", "indefinido");
+        etiologicClassification.put("confianca_percentual", 0);
+        etiologicClassification.put("justificativa", "Aguardando retorno do modelo");
+        analysis.put("classificacao_etiologica", etiologicClassification);
+        analysis.put("recomendacoes_prioritarias", List.of());
         
         return analysis;
     }
@@ -269,6 +284,17 @@ public class AIService {
         textureAnalysis.put("presenca_solucao_continuidade", "Não");
         textureAnalysis.put("bordas_lesao", "Definidas");
         analysis.put("analise_textura_e_caracteristicas", textureAnalysis);
+
+        Map<String, Object> etiologicClassification = new HashMap<>();
+        etiologicClassification.put("tipo_probabilistico", "indefinido");
+        etiologicClassification.put("confianca_percentual", 0);
+        etiologicClassification.put("justificativa", "Modo demonstração - sem análise real.");
+        analysis.put("classificacao_etiologica", etiologicClassification);
+        analysis.put("recomendacoes_prioritarias", List.of(
+            "Manter ferida limpa e coberta",
+            "Monitorar sinais de infecção",
+            "Registrar novas imagens para comparação"
+        ));
         
         return analysis;
     }
