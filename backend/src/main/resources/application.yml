@@ -1,6 +1,9 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
+
 spring:
+  application:
+    name: healplus-backend
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/heal_plus_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -12,15 +15,60 @@ spring:
       hibernate:
         show_sql: false
         format_sql: false
+    show-sql: false
   data:
     mongodb:
       uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/heal_plus_db}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+
 jwt:
   secret: ${JWT_SECRET:heal_plus_secret_key}
   expirationHours: ${JWT_EXPIRATION_HOURS:168}
+
 cors:
   origins: ${CORS_ORIGINS:http://localhost:3000}
+
 gemini:
   api:
     key: ${GEMINI_API_KEY:}
     url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent}
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.healplus: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

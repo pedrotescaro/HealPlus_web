@@ -2,64 +2,37 @@ package com.healplus.controllers;
 
 import com.healplus.dto.AuthDtos;
 import com.healplus.entities.User;
-import com.healplus.repositories.UserRepository;
-import com.healplus.security.JwtUtil;
-import org.springframework.http.HttpStatus;
+import com.healplus.services.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticação", description = "Endpoints para autenticação e registro de usuários")
+@RequiredArgsConstructor
 public class AuthController {
-  private final UserRepository userRepository;
-  private final PasswordEncoder passwordEncoder;
-  private final JwtUtil jwtUtil;
-
-  public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.jwtUtil = jwtUtil;
-  }
+  
+  private final AuthService authService;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody AuthDtos.UserCreate data) {
-    Optional<User> existing = userRepository.findByEmail(data.getEmail());
-    if (existing.isPresent()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email already registered");
-    User u = new User();
-    u.setId(UUID.randomUUID().toString());
-    u.setEmail(data.getEmail());
-    u.setName(data.getName());
-    u.setRole(data.getRole() == null ? "professional" : data.getRole());
-    u.setPassword(passwordEncoder.encode(data.getPassword()));
-    u.setCreatedAt(Instant.now());
-    userRepository.save(u);
-    AuthDtos.TokenResponse resp = new AuthDtos.TokenResponse();
-    resp.setToken(jwtUtil.createToken(u.getId()));
-    resp.setUser(u);
-    return ResponseEntity.ok(resp);
+  @Operation(summary = "Registrar novo usuário", description = "Cria uma nova conta de usuário no sistema")
+  public ResponseEntity<AuthDtos.TokenResponse> register(@Valid @RequestBody AuthDtos.UserCreate data) {
+    return ResponseEntity.ok(authService.register(data));
   }
 
   @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody AuthDtos.UserLogin data) {
-    Optional<User> existing = userRepository.findByEmail(data.getEmail());
-    if (existing.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    User u = existing.get();
-    if (!passwordEncoder.matches(data.getPassword(), u.getPassword())) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    AuthDtos.TokenResponse resp = new AuthDtos.TokenResponse();
-    resp.setToken(jwtUtil.createToken(u.getId()));
-    resp.setUser(u);
-    return ResponseEntity.ok(resp);
+  @Operation(summary = "Login de usuário", description = "Autentica um usuário e retorna um token JWT")
+  public ResponseEntity<AuthDtos.TokenResponse> login(@Valid @RequestBody AuthDtos.UserLogin data) {
+    return ResponseEntity.ok(authService.login(data));
   }
 
   @GetMapping("/me")
-  public ResponseEntity<?> me(@RequestAttribute(value = "org.springframework.security.core.context.SecurityContext", required = false) Object sc) {
-    Object principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal() : null;
-    if (principal instanceof User) return ResponseEntity.ok(principal);
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+  @Operation(summary = "Obter usuário atual", description = "Retorna os dados do usuário autenticado")
+  public ResponseEntity<User> me() {
+    return ResponseEntity.ok(authService.getCurrentUser());
   }
 }

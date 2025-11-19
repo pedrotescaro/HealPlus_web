@@ -29,9 +29,11 @@ public class SecurityConfig {
   private String corsOrigins;
 
   private final JwtAuthFilter jwtAuthFilter;
-
-  public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+  private final com.healplus.security.RateLimitFilter rateLimitFilter;
+  
+  public SecurityConfig(JwtAuthFilter jwtAuthFilter, com.healplus.security.RateLimitFilter rateLimitFilter) {
     this.jwtAuthFilter = jwtAuthFilter;
+    this.rateLimitFilter = rateLimitFilter;
   }
 
   @Bean
@@ -40,9 +42,12 @@ public class SecurityConfig {
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(reg -> reg
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+            .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/").permitAll()
             .anyRequest().authenticated())
         .httpBasic(Customizer.withDefaults())
+        .addFilterBefore(rateLimitFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
