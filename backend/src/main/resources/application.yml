@@ -20,3 +20,7 @@ jwt:
   expirationHours: ${JWT_EXPIRATION_HOURS:168}
 cors:
   origins: ${CORS_ORIGINS:http://localhost:3000}
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+    url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent}
