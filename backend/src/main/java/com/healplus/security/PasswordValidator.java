@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
+
 @Component
 public class PasswordValidator {
     
@@ -32,7 +33,7 @@ public class PasswordValidator {
         ));
     }
     
-    public ValidationResult validate(String password) {
+    public RuleResult validate(String password) {
         return validator.validate(new PasswordData(password));
     }
     
@@ -40,7 +41,7 @@ public class PasswordValidator {
         return validate(password).isValid();
     }
     
-    public String getErrorMessage(ValidationResult result) {
+    public String getErrorMessage(RuleResult result) {
         List<String> messages = validator.getMessages(result);
         return String.join(", ", messages);
     }

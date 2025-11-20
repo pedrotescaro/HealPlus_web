@@ -107,7 +107,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(passwordValidator.isValid(anyString())).thenReturn(false);
         when(passwordValidator.validate(anyString())).thenReturn(
-            org.passay.ValidationResult.valid()
+            org.passay.RuleResult.validate()
         );
         
         // Act & Assert
