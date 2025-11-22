@@ -13,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/chat")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearer-jwt")
 public class ChatController {
   private final ChatMessageRepository repo;
 

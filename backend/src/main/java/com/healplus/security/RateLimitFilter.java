@@ -22,8 +22,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimitConfig rateLimitConfig;
     
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
-                                   FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@org.springframework.lang.NonNull HttpServletRequest request, @org.springframework.lang.NonNull HttpServletResponse response, 
+                                   @org.springframework.lang.NonNull FilterChain filterChain) throws ServletException, IOException {
         
         // Pular rate limit para health checks e documentação
         String path = request.getRequestURI();
@@ -49,7 +49,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
     
-    private String getClientIp(HttpServletRequest request) {
+    private String getClientIp(@org.springframework.lang.NonNull HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
             return xForwardedFor.split(",")[0].trim();

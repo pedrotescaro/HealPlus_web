@@ -2,7 +2,6 @@ package com.healplus.dto;
 
 import lombok.Data;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class AIDtos {
@@ -16,6 +15,13 @@ public class AIDtos {
         private ColorAnalysis analiseColorimetrica;
         private HistogramAnalysis analiseHistograma;
         private TextureAnalysis analiseTexturaECaracteristicas;
+        public void setIdImagem(String idImagem) { this.idImagem = idImagem; }
+        public void setDataHoraCaptura(String dataHoraCaptura) { this.dataHoraCaptura = dataHoraCaptura; }
+        public void setAvaliacaoQualidade(QualityAssessment avaliacaoQualidade) { this.avaliacaoQualidade = avaliacaoQualidade; }
+        public void setAnaliseDimensional(DimensionalAnalysis analiseDimensional) { this.analiseDimensional = analiseDimensional; }
+        public void setAnaliseColorimetrica(ColorAnalysis analiseColorimetrica) { this.analiseColorimetrica = analiseColorimetrica; }
+        public void setAnaliseHistograma(HistogramAnalysis analiseHistograma) { this.analiseHistograma = analiseHistograma; }
+        public void setAnaliseTexturaECaracteristicas(TextureAnalysis analiseTexturaECaracteristicas) { this.analiseTexturaECaracteristicas = analiseTexturaECaracteristicas; }
     }
     
     @Data
@@ -80,6 +86,12 @@ public class AIDtos {
         private String image2Base64;
         private String image2Id;
         private String image2DateTime;
+        public String getImage1Base64() { return image1Base64; }
+        public String getImage1Id() { return image1Id; }
+        public String getImage1DateTime() { return image1DateTime; }
+        public String getImage2Base64() { return image2Base64; }
+        public String getImage2Id() { return image2Id; }
+        public String getImage2DateTime() { return image2DateTime; }
     }
     
     @Data
@@ -87,6 +99,9 @@ public class AIDtos {
         private ImageAnalysisResponse analiseImagem1;
         private ImageAnalysisResponse analiseImagem2;
         private ComparativeReport relatorioComparativo;
+        public void setAnaliseImagem1(ImageAnalysisResponse analiseImagem1) { this.analiseImagem1 = analiseImagem1; }
+        public void setAnaliseImagem2(ImageAnalysisResponse analiseImagem2) { this.analiseImagem2 = analiseImagem2; }
+        public void setRelatorioComparativo(ComparativeReport relatorioComparativo) { this.relatorioComparativo = relatorioComparativo; }
     }
     
     @Data
@@ -96,6 +111,11 @@ public class AIDtos {
         private DataConsistency consistenciaDados;
         private QuantitativeProgress analiseQuantitativaProgressao;
         private String resumoDescritivoEvolucao;
+        public void setPeriodoAnalise(String periodoAnalise) { this.periodoAnalise = periodoAnalise; }
+        public void setIntervaloTempo(String intervaloTempo) { this.intervaloTempo = intervaloTempo; }
+        public void setConsistenciaDados(DataConsistency consistenciaDados) { this.consistenciaDados = consistenciaDados; }
+        public void setAnaliseQuantitativaProgressao(QuantitativeProgress analiseQuantitativaProgressao) { this.analiseQuantitativaProgressao = analiseQuantitativaProgressao; }
+        public void setResumoDescritivoEvolucao(String resumoDescritivoEvolucao) { this.resumoDescritivoEvolucao = resumoDescritivoEvolucao; }
     }
     
     @Data
@@ -126,6 +146,10 @@ public class AIDtos {
         private String image2Base64;
         private String report1Date;
         private String report2Date;
+        public String getImage1Base64() { return image1Base64; }
+        public String getImage2Base64() { return image2Base64; }
+        public String getReport1Date() { return report1Date; }
+        public String getReport2Date() { return report2Date; }
     }
 }
 

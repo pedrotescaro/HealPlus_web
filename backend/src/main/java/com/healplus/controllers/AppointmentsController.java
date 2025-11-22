@@ -13,6 +13,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/appointments")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearer-jwt")
 public class AppointmentsController {
   private final AppointmentRepository repo;
 
@@ -21,7 +22,7 @@ public class AppointmentsController {
   }
 
   @PostMapping
-  public ResponseEntity<Appointment> create(@RequestBody AppointmentDtos.AppointmentCreate data) {
+  public ResponseEntity<Appointment> create(@jakarta.validation.Valid @RequestBody AppointmentDtos.AppointmentCreate data) {
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     Appointment a = new Appointment();
     a.setId(UUID.randomUUID().toString());

@@ -16,6 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/wounds")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearer-jwt")
 public class WoundsController {
   private final WoundAnalysisRepository repo;
   private final AIService aiService;
@@ -26,7 +27,7 @@ public class WoundsController {
   }
 
   @PostMapping("/analyze")
-  public ResponseEntity<WoundAnalysis> analyze(@RequestBody WoundDtos.WoundAnalysisCreate data) {
+  public ResponseEntity<WoundAnalysis> analyze(@jakarta.validation.Valid @RequestBody WoundDtos.WoundAnalysisCreate data) {
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     WoundAnalysis wa = new WoundAnalysis();
     wa.setId(UUID.randomUUID().toString());
@@ -67,7 +68,7 @@ public class WoundsController {
    */
   @PostMapping("/compare-images")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareImages(
-      @RequestBody AIDtos.CompareImagesRequest request) {
+      @jakarta.validation.Valid @RequestBody AIDtos.CompareImagesRequest request) {
     
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     
@@ -104,7 +105,7 @@ public class WoundsController {
    */
   @PostMapping("/compare-reports")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareReports(
-      @RequestBody AIDtos.CompareReportsRequest request) {
+      @jakarta.validation.Valid @RequestBody AIDtos.CompareReportsRequest request) {
     
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     

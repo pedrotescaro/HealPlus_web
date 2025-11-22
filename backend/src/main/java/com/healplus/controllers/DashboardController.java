@@ -6,6 +6,7 @@ import com.healplus.repositories.mongo.WoundAnalysisRepository;
 import com.healplus.repositories.AppointmentRepository;
 import com.healplus.entities.Appointment;
 import org.springframework.http.ResponseEntity;
+import java.time.OffsetDateTime;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearer-jwt")
 public class DashboardController {
   private final PatientRepository patientRepo;
   private final WoundAnalysisRepository woundRepo;
@@ -33,7 +35,12 @@ public class DashboardController {
     res.put("total_analyses", woundRepo.countByProfessionalId(u.getId()));
     res.put("total_reports", 0);
     List<Appointment> upcoming = appointmentRepo.findByProfessionalIdOrderByScheduledDateAsc(u.getId());
-    res.put("upcoming_appointments", upcoming.stream().filter(a -> "scheduled".equalsIgnoreCase(a.getStatus())).limit(5).toList());
+    OffsetDateTime now = OffsetDateTime.now();
+    res.put("upcoming_appointments", upcoming.stream()
+        .filter(a -> "scheduled".equalsIgnoreCase(a.getStatus()))
+        .filter(a -> a.getScheduledDate() != null && a.getScheduledDate().isAfter(now))
+        .limit(5)
+        .toList());
     return ResponseEntity.ok(res);
   }
 }
