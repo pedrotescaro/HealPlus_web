@@ -66,7 +66,7 @@ const LoginPage = () => {
 
   // Função fictícia para login social
   const handleSocialLogin = (provider) => {
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
     
     if (provider === 'Google') {
       window.location.href = `${backendUrl}/api/auth/login/google`;

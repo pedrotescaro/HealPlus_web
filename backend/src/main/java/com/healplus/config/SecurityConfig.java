@@ -25,7 +25,7 @@ import java.util.Arrays;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-  @Value("${cors.origins}")
+  @Value("${cors.origins:http://localhost:3000}")
   private String corsOrigins;
 
   private final JwtAuthFilter jwtAuthFilter;

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
 const DEMO_MODE = String(process.env.REACT_APP_DEMO_MODE).toLowerCase() === 'true';
 
 const api = axios.create({
@@ -9,6 +9,28 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401) {
+      localStorage.removeItem('token');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 const demoUser = {
   id: 'demo-user',
   name: 'Visitante',
@@ -204,6 +226,13 @@ export const dashboardService = {
       headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
+  },
+};
+
+export const systemService = {
+  health: async () => {
+    const res = await axios.get(`${API_URL}/actuator/health`, { withCredentials: false });
+    return res.data;
   },
 };
 
