@@ -1,11 +1,9 @@
 package com.healplus.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
 
-@Data
 public class AuthDtos {
-  @Data
+  
   public static class UserCreate {
     @NotBlank(message = "Email é obrigatório")
     @Email(message = "Email deve ter um formato válido")
@@ -22,9 +20,22 @@ public class AuthDtos {
     
     @Pattern(regexp = "^(professional|admin)$", message = "Role deve ser professional ou admin")
     private String role;
+
+    public UserCreate() {}
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
   }
   
-  @Data
   public static class UserLogin {
     @NotBlank(message = "Email é obrigatório")
     @Email(message = "Email deve ter um formato válido")
@@ -32,11 +43,26 @@ public class AuthDtos {
     
     @NotBlank(message = "Senha é obrigatória")
     private String password;
+
+    public UserLogin() {}
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
   }
   
-  @Data
   public static class TokenResponse {
     private String token;
     private Object user;
+
+    public TokenResponse() {}
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
+    public Object getUser() { return user; }
+    public void setUser(Object user) { this.user = user; }
   }
 }

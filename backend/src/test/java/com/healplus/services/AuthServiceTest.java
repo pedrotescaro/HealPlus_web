@@ -8,6 +8,7 @@ import com.healplus.repositories.UserRepository;
 import com.healplus.security.JwtUtil;
 import com.healplus.security.PasswordValidator;
 import com.healplus.audit.AuditService;
+import org.passay.RuleResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -106,9 +107,8 @@ class AuthServiceTest {
         // Arrange
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(passwordValidator.isValid(anyString())).thenReturn(false);
-        when(passwordValidator.validate(anyString())).thenReturn(
-            org.passay.RuleResult.validate()
-        );
+        RuleResult ruleResult = new RuleResult(false);
+        when(passwordValidator.validate(anyString())).thenReturn(ruleResult);
         
         // Act & Assert
         assertThrows(BadRequestException.class, () -> authService.register(userCreateDto));
