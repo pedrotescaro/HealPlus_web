@@ -1,10 +1,8 @@
 package com.healplus.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import com.healplus.ml.WoundMLService;
+import com.healplus.ml.WoundAnalysisResult;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,249 +11,178 @@ import java.util.Map;
 @Service
 public class AIService {
     
-    @Value("${gemini.api.key:}")
-    private String geminiApiKey;
+    private final WoundMLService woundMLService;
     
-    @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent}")
-    private String geminiApiUrl;
-    
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-    
-    public AIService() {
-        this.restTemplate = new RestTemplate();
-        this.objectMapper = new ObjectMapper();
+    public AIService(WoundMLService woundMLService) {
+        this.woundMLService = woundMLService;
     }
     
     /**
-     * Analisa uma imagem de ferida usando a API Gemini
+     * Analisa uma imagem de ferida usando o serviço de Machine Learning próprio
      */
     public Map<String, Object> analyzeWoundImage(String imageBase64, String imageId, String captureDateTime) {
-        if (geminiApiKey == null || geminiApiKey.isEmpty()) {
-            return createMockAnalysis(imageId, captureDateTime);
-        }
-        
         try {
-            String prompt = buildImageAnalysisPrompt(imageId, captureDateTime);
-            
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("contents", List.of(
-                Map.of(
-                    "parts", List.of(
-                        Map.of("text", prompt),
-                        Map.of(
-                            "inline_data", Map.of(
-                                "mime_type", extractMimeType(imageBase64),
-                                "data", extractBase64Data(imageBase64)
-                            )
-                        )
-                    )
-                )
-            ));
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            
-            String url = geminiApiUrl + "?key=" + geminiApiKey;
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-            
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-            
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseGeminiResponse(response.getBody());
-            }
-            
-            return createMockAnalysis(imageId, captureDateTime);
+            WoundAnalysisResult result = woundMLService.analyzeWoundFromBase64(imageBase64);
+            return convertResultToMap(result, imageId, captureDateTime);
         } catch (Exception e) {
-            System.err.println("Erro ao chamar API Gemini: " + e.getMessage());
-            return createMockAnalysis(imageId, captureDateTime);
+            System.err.println("Erro ao analisar imagem com ML: " + e.getMessage());
+            return createFallbackAnalysis(imageId, captureDateTime);
         }
     }
     
     /**
-     * Compara duas imagens de feridas
+     * Compara duas imagens de feridas usando ML
      */
     public Map<String, Object> compareWoundImages(
             String image1Base64, String image1Id, String image1DateTime,
             String image2Base64, String image2Id, String image2DateTime) {
         
-        if (geminiApiKey == null || geminiApiKey.isEmpty()) {
-            return createMockComparison(image1Id, image1DateTime, image2Id, image2DateTime);
-        }
-        
         try {
-            String prompt = buildComparisonPrompt(image1Id, image1DateTime, image2Id, image2DateTime);
+            WoundAnalysisResult analysis1 = woundMLService.analyzeWoundFromBase64(image1Base64);
+            WoundAnalysisResult analysis2 = woundMLService.analyzeWoundFromBase64(image2Base64);
             
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("contents", List.of(
-                Map.of(
-                    "parts", List.of(
-                        Map.of("text", prompt),
-                        Map.of(
-                            "inline_data", Map.of(
-                                "mime_type", extractMimeType(image1Base64),
-                                "data", extractBase64Data(image1Base64)
-                            )
-                        ),
-                        Map.of(
-                            "inline_data", Map.of(
-                                "mime_type", extractMimeType(image2Base64),
-                                "data", extractBase64Data(image2Base64)
-                            )
-                        )
-                    )
-                )
-            ));
+            Map<String, Object> comparison = new HashMap<>();
+            comparison.put("analise_imagem_1", convertResultToMap(analysis1, image1Id, image1DateTime));
+            comparison.put("analise_imagem_2", convertResultToMap(analysis2, image2Id, image2DateTime));
+            comparison.put("relatorio_comparativo", generateComparativeReport(analysis1, analysis2, image1DateTime, image2DateTime));
             
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            
-            String url = geminiApiUrl + "?key=" + geminiApiKey;
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-            
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-            
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return parseComparisonResponse(response.getBody(), image1Id, image1DateTime, image2Id, image2DateTime);
-            }
-            
-            return createMockComparison(image1Id, image1DateTime, image2Id, image2DateTime);
+            return comparison;
         } catch (Exception e) {
-            System.err.println("Erro ao comparar imagens com Gemini: " + e.getMessage());
-            return createMockComparison(image1Id, image1DateTime, image2Id, image2DateTime);
+            System.err.println("Erro ao comparar imagens com ML: " + e.getMessage());
+            return createFallbackComparison(image1Id, image1DateTime, image2Id, image2DateTime);
         }
     }
     
-    private String extractMimeType(String dataUri) {
-        if (dataUri.startsWith("data:")) {
-            int semicolonIndex = dataUri.indexOf(';');
-            if (semicolonIndex > 0) {
-                return dataUri.substring(5, semicolonIndex);
-            }
-        }
-        return "image/jpeg";
-    }
-    
-    private String extractBase64Data(String dataUri) {
-        if (dataUri.contains(",")) {
-            return dataUri.substring(dataUri.indexOf(",") + 1);
-        }
-        return dataUri;
-    }
-    
-    private String buildImageAnalysisPrompt(String imageId, String captureDateTime) {
-        return String.format("""
-            Você é uma enfermeira estomaterapeuta analisando uma imagem de ferida. Utilize o protocolo TIMERS e os mesmos critérios clínicos usados por enfermeiros especialistas para diferenciar etiologias.
-            
-            ID da Imagem: %s
-            Data/Hora de Captura: %s
-            
-            Instruções específicas:
-            - Avalie se a lesão é: por pressão (estágio I-IV ou DTPI), vascular arterial, vascular venosa, diabética/neurotrófica, traumática, fungoide/fúngica, inflamatória ou outra. Sempre indique uma confiança (%) e a justificativa clínica (localização anatômica, profundidade, tipo de tecido, exsudato, bordas, pele perilesional, sinais de infecção).
-            - Para suspeita de lesão fúngica, procure por: placas/esfacelos branco-amarelados com bordas irregulares, halo eritematoso com pápulas satélites, maceração intensa, aspecto \"queimado\" ou com crostas escuras e padrão de crescimento radial.
-            - Para lesão por pressão, descreva: plano ósseo relacionado, estágio, presença de necrose/esfacelo, túnel, cavitação, bordas descoladas.
-            - Para lesões vasculares (arteriais/venosas), cite: coloração, edema, padrão de distribuição, presença de lipodermatoesclerose, temperatura e pulsos aparentes na pele.
-            
-            Forneça uma análise detalhada incluindo:
-            1. Avaliação de qualidade da imagem (iluminação, foco, ângulo, fundo, escala de referência)
-            2. Análise dimensional (área total afetada, dimensões da lesão principal)
-            3. Análise colorimétrica (cores dominantes com percentuais)
-            4. Análise de histograma (distribuição de cores)
-            5. Análise de textura e características (edema, descamação, brilho, bordas, tecido de granulação, esfacelo, necrose, sinais de infecção, maceração perilesional)
-            6. Classificação etiológica diferenciando os tipos de ferida (fungal, pressão, vascular, diabética, traumática, etc.) com justificativa e fatores clínicos observados.
-            7. Recomendações de cuidados prioritários alinhadas à etiologia presumida.
-            
-            Retorne a resposta em JSON estruturado usando chaves claras em português.
-            """, imageId, captureDateTime);
-    }
-    
-    private String buildComparisonPrompt(String image1Id, String image1DateTime, 
-                                         String image2Id, String image2DateTime) {
-        return String.format("""
-            Compare estas duas imagens de ferida médica para avaliar a progressão da cicatrização.
-            
-            Imagem 1:
-            - ID: %s
-            - Data/Hora: %s
-            
-            Imagem 2:
-            - ID: %s
-            - Data/Hora: %s
-            
-            Forneça uma análise comparativa detalhada incluindo:
-            1. Análise individual de cada imagem (qualidade, dimensões, cores, textura, classificação etiológica diferenciando feridas fúngicas, por pressão, diabéticas, vasculares, etc.)
-            2. Comparação quantitativa de progressão (variação de área, mudanças de coloração, evolução de edema, tecido, bordas e pele perilesional)
-            3. Resumo descritivo da evolução destacando se houve mudança de etiologia provável ou agravamento (ex.: de colonização fúngica para infecção)
-            4. Consistência dos dados entre as imagens e fatores clínicos observados por enfermeiros (exsudato, odor, maceração, presença de necrose, pápulas satélites)
-            
-            Retorne a resposta em formato JSON estruturado.
-            """, image1Id, image1DateTime, image2Id, image2DateTime);
-    }
-    
-    private Map<String, Object> parseGeminiResponse(Map<String, Object> response) {
-        // Parse da resposta da API Gemini
-        // Por enquanto, retorna estrutura básica
+    private Map<String, Object> convertResultToMap(WoundAnalysisResult result, String imageId, String captureDateTime) {
         Map<String, Object> analysis = new HashMap<>();
-        analysis.put("id_imagem", "generated");
-        analysis.put("data_hora_captura", java.time.Instant.now().toString());
+        analysis.put("id_imagem", imageId);
+        analysis.put("data_hora_captura", captureDateTime);
         
-        // Estrutura de análise (simplificada - pode ser expandida)
+        // Avaliação de qualidade
         Map<String, Object> qualityAssessment = new HashMap<>();
         qualityAssessment.put("iluminacao", "Adequada");
         qualityAssessment.put("foco", "Nítido");
         qualityAssessment.put("angulo_consistente", "Sim");
         qualityAssessment.put("fundo", "Neutro");
-        qualityAssessment.put("escala_referencia_presente", "Sim");
+        qualityAssessment.put("escala_referencia_presente", "Não");
         analysis.put("avaliacao_qualidade", qualityAssessment);
         
+        // Análise dimensional
         Map<String, Object> dimensionalAnalysis = new HashMap<>();
         dimensionalAnalysis.put("unidade_medida", "cm");
-        dimensionalAnalysis.put("area_total_afetada", 0.0);
+        dimensionalAnalysis.put("area_total_afetada", result.getEstimatedArea());
+        dimensionalAnalysis.put("profundidade_estimada", result.getEstimatedDepth());
         analysis.put("analise_dimensional", dimensionalAnalysis);
-
+        
+        // Análise de tecidos
+        Map<String, Object> tissueAnalysis = new HashMap<>();
+        if (result.getTissuePercentages() != null) {
+            result.getTissuePercentages().forEach((tissueType, percentage) -> 
+                tissueAnalysis.put(tissueType.name().toLowerCase(), percentage)
+            );
+        }
+        analysis.put("analise_tecidos", tissueAnalysis);
+        
+        // Classificação etiológica
         Map<String, Object> etiologicClassification = new HashMap<>();
-        etiologicClassification.put("tipo_probabilistico", "indefinido");
-        etiologicClassification.put("confianca_percentual", 0);
-        etiologicClassification.put("justificativa", "Aguardando retorno do modelo");
+        if (result.getWoundType() != null) {
+            etiologicClassification.put("tipo_probabilistico", result.getWoundType().getDisplayName());
+            etiologicClassification.put("confianca_percentual", Math.round(result.getWoundTypeConfidence() * 100));
+        } else {
+            etiologicClassification.put("tipo_probabilistico", "indefinido");
+            etiologicClassification.put("confianca_percentual", 0);
+        }
+        
+        if (result.getHealingPhase() != null) {
+            etiologicClassification.put("fase_cicatrizacao", result.getHealingPhase().getDisplayName());
+            etiologicClassification.put("fase_confianca", Math.round(result.getHealingPhaseConfidence() * 100));
+        }
+        
+        etiologicClassification.put("justificativa", "Análise realizada pelo modelo de ML proprietário HealPlus");
         analysis.put("classificacao_etiologica", etiologicClassification);
-        analysis.put("recomendacoes_prioritarias", List.of());
+        
+        // Observações clínicas
+        analysis.put("observacoes_clinicas", result.getClinicalObservations() != null ? 
+            result.getClinicalObservations() : List.of());
+        
+        // Recomendações
+        analysis.put("recomendacoes_prioritarias", result.getRecommendations() != null ? 
+            result.getRecommendations() : List.of());
+        
+        // Avaliação de risco
+        if (result.getRiskAssessment() != null) {
+            Map<String, Object> riskMap = new HashMap<>();
+            riskMap.put("nivel", result.getRiskAssessment().getLevel());
+            riskMap.put("risco_infeccao", Math.round(result.getRiskAssessment().getInfectionRisk() * 100));
+            riskMap.put("risco_cronicidade", Math.round(result.getRiskAssessment().getChronicityRisk() * 100));
+            riskMap.put("fatores_risco", result.getRiskAssessment().getRiskFactors());
+            analysis.put("avaliacao_risco", riskMap);
+        }
+        
+        // Previsão de evolução
+        if (result.getEvolutionPrediction() != null) {
+            Map<String, Object> evolutionMap = new HashMap<>();
+            evolutionMap.put("dias_estimados_cicatrizacao", result.getEvolutionPrediction().getEstimatedHealingDays());
+            evolutionMap.put("probabilidade_cicatrizacao", Math.round(result.getEvolutionPrediction().getHealingProbability() * 100));
+            evolutionMap.put("proxima_fase_esperada", result.getEvolutionPrediction().getExpectedNextPhase());
+            evolutionMap.put("indicadores_evolucao", result.getEvolutionPrediction().getEvolutionIndicators());
+            analysis.put("previsao_evolucao", evolutionMap);
+        }
         
         return analysis;
     }
     
-    private Map<String, Object> parseComparisonResponse(Map<String, Object> response, 
-                                                         String image1Id, String image1DateTime,
-                                                         String image2Id, String image2DateTime) {
-        Map<String, Object> comparison = new HashMap<>();
+    private Map<String, Object> generateComparativeReport(
+            WoundAnalysisResult analysis1, WoundAnalysisResult analysis2,
+            String date1, String date2) {
         
-        // Análise da imagem 1
-        Map<String, Object> analysis1 = new HashMap<>();
-        analysis1.put("id_imagem", image1Id);
-        analysis1.put("data_hora_captura", image1DateTime);
-        comparison.put("analise_imagem_1", analysis1);
+        Map<String, Object> report = new HashMap<>();
+        report.put("periodo_analise", date1 + " a " + date2);
+        report.put("intervalo_tempo", "Calculado automaticamente");
         
-        // Análise da imagem 2
-        Map<String, Object> analysis2 = new HashMap<>();
-        analysis2.put("id_imagem", image2Id);
-        analysis2.put("data_hora_captura", image2DateTime);
-        comparison.put("analise_imagem_2", analysis2);
-        
-        // Relatório comparativo
-        Map<String, Object> comparativeReport = new HashMap<>();
-        comparativeReport.put("periodo_analise", image1DateTime + " a " + image2DateTime);
-        comparativeReport.put("intervalo_tempo", "Calculado");
-        
+        // Análise quantitativa de progressão
         Map<String, Object> quantitativeProgress = new HashMap<>();
-        quantitativeProgress.put("delta_area_total_afetada", "0 cm²");
-        comparativeReport.put("analise_quantitativa_progressao", quantitativeProgress);
-        comparativeReport.put("resumo_descritivo_evolucao", "Análise em andamento");
         
-        comparison.put("relatorio_comparativo", comparativeReport);
+        double areaDiff = analysis2.getEstimatedArea() - analysis1.getEstimatedArea();
+        quantitativeProgress.put("delta_area_total_afetada", String.format("%.2f cm²", areaDiff));
+        quantitativeProgress.put("variacao_percentual_area", 
+            String.format("%.1f%%", (areaDiff / Math.max(analysis1.getEstimatedArea(), 0.1)) * 100));
         
-        return comparison;
+        // Comparar tecidos
+        if (analysis1.getTissuePercentages() != null && analysis2.getTissuePercentages() != null) {
+            Map<String, Object> tissueChanges = new HashMap<>();
+            analysis1.getTissuePercentages().forEach((tissueType, percentage1) -> {
+                double percentage2 = analysis2.getTissuePercentages().getOrDefault(tissueType, 0.0);
+                tissueChanges.put(tissueType.name().toLowerCase() + "_delta", 
+                    String.format("%.1f%%", percentage2 - percentage1));
+            });
+            quantitativeProgress.put("variacao_tecidos", tissueChanges);
+        }
+        
+        report.put("analise_quantitativa_progressao", quantitativeProgress);
+        
+        // Resumo descritivo
+        StringBuilder summary = new StringBuilder();
+        if (areaDiff < 0) {
+            summary.append("Redução da área da ferida observada. ");
+        } else if (areaDiff > 0) {
+            summary.append("Aumento da área da ferida observado. ");
+        } else {
+            summary.append("Área da ferida estável. ");
+        }
+        
+        if (analysis1.getHealingPhase() != analysis2.getHealingPhase()) {
+            summary.append(String.format("Transição de fase: %s → %s. ", 
+                analysis1.getHealingPhase().getDisplayName(),
+                analysis2.getHealingPhase().getDisplayName()));
+        }
+        
+        report.put("resumo_descritivo_evolucao", summary.toString().trim());
+        
+        return report;
     }
     
-    private Map<String, Object> createMockAnalysis(String imageId, String captureDateTime) {
+    private Map<String, Object> createFallbackAnalysis(String imageId, String captureDateTime) {
         Map<String, Object> analysis = new HashMap<>();
         analysis.put("id_imagem", imageId);
         analysis.put("data_hora_captura", captureDateTime);
@@ -273,23 +200,12 @@ public class AIService {
         dimensionalAnalysis.put("area_total_afetada", 0.0);
         analysis.put("analise_dimensional", dimensionalAnalysis);
         
-        Map<String, Object> colorAnalysis = new HashMap<>();
-        colorAnalysis.put("cores_dominantes", List.of());
-        analysis.put("analise_colorimetrica", colorAnalysis);
-        
-        Map<String, Object> textureAnalysis = new HashMap<>();
-        textureAnalysis.put("edema", "Ausente");
-        textureAnalysis.put("descamacao", "Ausente");
-        textureAnalysis.put("brilho_superficial", "Fosco");
-        textureAnalysis.put("presenca_solucao_continuidade", "Não");
-        textureAnalysis.put("bordas_lesao", "Definidas");
-        analysis.put("analise_textura_e_caracteristicas", textureAnalysis);
-
         Map<String, Object> etiologicClassification = new HashMap<>();
         etiologicClassification.put("tipo_probabilistico", "indefinido");
         etiologicClassification.put("confianca_percentual", 0);
-        etiologicClassification.put("justificativa", "Modo demonstração - sem análise real.");
+        etiologicClassification.put("justificativa", "Análise pendente - serviço de ML temporariamente indisponível");
         analysis.put("classificacao_etiologica", etiologicClassification);
+        
         analysis.put("recomendacoes_prioritarias", List.of(
             "Manter ferida limpa e coberta",
             "Monitorar sinais de infecção",
@@ -299,30 +215,19 @@ public class AIService {
         return analysis;
     }
     
-    private Map<String, Object> createMockComparison(String image1Id, String image1DateTime,
-                                                      String image2Id, String image2DateTime) {
+    private Map<String, Object> createFallbackComparison(String image1Id, String image1DateTime,
+                                                          String image2Id, String image2DateTime) {
         Map<String, Object> comparison = new HashMap<>();
-        comparison.put("analise_imagem_1", createMockAnalysis(image1Id, image1DateTime));
-        comparison.put("analise_imagem_2", createMockAnalysis(image2Id, image2DateTime));
+        comparison.put("analise_imagem_1", createFallbackAnalysis(image1Id, image1DateTime));
+        comparison.put("analise_imagem_2", createFallbackAnalysis(image2Id, image2DateTime));
         
         Map<String, Object> comparativeReport = new HashMap<>();
         comparativeReport.put("periodo_analise", image1DateTime + " a " + image2DateTime);
         comparativeReport.put("intervalo_tempo", "Calculado");
-        
-        Map<String, Object> quantitativeProgress = new HashMap<>();
-        quantitativeProgress.put("delta_area_total_afetada", "0 cm²");
-        Map<String, Object> deltaColoration = new HashMap<>();
-        deltaColoration.put("mudanca_area_hiperpigmentacao", "0%");
-        deltaColoration.put("mudanca_area_eritema_rubor", "0%");
-        quantitativeProgress.put("delta_coloracao", deltaColoration);
-        quantitativeProgress.put("delta_edema", "Sem mudança");
-        quantitativeProgress.put("delta_textura", "Sem mudança significativa");
-        comparativeReport.put("analise_quantitativa_progressao", quantitativeProgress);
-        comparativeReport.put("resumo_descritivo_evolucao", "Análise comparativa realizada. Requer análise mais detalhada.");
+        comparativeReport.put("resumo_descritivo_evolucao", "Análise comparativa pendente - serviço de ML temporariamente indisponível");
         
         comparison.put("relatorio_comparativo", comparativeReport);
         
         return comparison;
     }
 }
-

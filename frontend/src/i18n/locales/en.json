@@ -66,6 +66,7 @@
     "title": "Patients",
     "addNew": "Add Patient",
     "name": "Name",
+    "namePlaceholder": "Enter patient name",
     "age": "Age",
     "gender": "Gender",
     "contact": "Contact",
@@ -74,7 +75,26 @@
     "other": "Other",
     "viewDetails": "View Details",
     "woundHistory": "Wound History",
-    "newAssessment": "New Assessment"
+    "newAssessment": "New Assessment",
+    "patientsTotal": "patients total",
+    "searchPlaceholder": "Search by name or contact...",
+    "noPatients": "No patients registered",
+    "noResults": "No results found"
+  },
+  "assessments": {
+    "selectPatient": "Select Patient",
+    "selectPatientDesc": "Choose the patient for this assessment",
+    "searchPatient": "Search patient...",
+    "imageDesc": "Upload a clear photo of the wound for AI analysis",
+    "analyzeWithAI": "Analyze with AI",
+    "timersDesc": "Fill in the clinical data of the wound",
+    "review": "Assessment Review",
+    "reviewDesc": "Check the data before saving",
+    "aiAnalysis": "AI Analysis",
+    "woundType": "Wound Type",
+    "recommendations": "Recommendations",
+    "saveAssessment": "Save Assessment",
+    "createNew": "Create a new wound assessment"
   },
   "timers": {
     "title": "TIMERS Assessment",
@@ -222,7 +242,7 @@
     "darkMode": "Dark Mode",
     "highContrast": "High Contrast",
     "apiKey": "AI API Key",
-    "apiKeyDesc": "Configure your Google Gemini API key for wound analysis",
+    "apiKeyDesc": "AI configuration using integrated Machine Learning",
     "apiKeyPlaceholder": "Paste your API key here",
     "testConnection": "Test Connection"
   },
@@ -234,9 +254,30 @@
   },
   "reports": {
     "title": "Reports",
+    "subtitle": "View and compare assessment reports",
     "generate": "Generate Report",
     "download": "Download PDF",
-    "view": "View"
+    "view": "View",
+    "viewAll": "View All",
+    "compare": "Compare",
+    "exitCompare": "Exit Compare Mode",
+    "compareMode": "Compare Mode",
+    "selectTwo": "Select 2 reports to compare",
+    "compareNow": "Compare Now",
+    "comparisonResult": "Comparison Result",
+    "comparisonComplete": "Comparison complete!",
+    "firstAnalysis": "First Analysis",
+    "secondAnalysis": "Second Analysis",
+    "evolution": "Evolution",
+    "report": "Report",
+    "reportDetails": "Report Details",
+    "aiAnalysis": "AI Analysis",
+    "classification": "Classification",
+    "recommendations": "Recommendations",
+    "pdfGenerated": "PDF generated successfully!",
+    "selectPatient": "Select a patient",
+    "noReports": "No reports found",
+    "noReportsDesc": "Create a new assessment to generate reports"
   },
   "faq": {
     "title": "Frequently Asked Questions",
@@ -257,7 +298,19 @@
     "logoutSuccess": "Logout successful!",
     "requiredFields": "Please fill in all required fields.",
     "invalidEmail": "Invalid email.",
-    "passwordTooShort": "Password must be at least 6 characters long."
+    "passwordTooShort": "Password must be at least 6 characters long.",
+    "analysisComplete": "Analysis completed successfully!",
+    "analysisError": "Error analyzing image",
+    "assessmentSaved": "Assessment saved successfully!",
+    "noImage": "Please upload an image",
+    "invalidImageType": "Please select a valid image",
+    "imageTooLarge": "Image must be at most 10MB"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "ageRequired": "Age is required",
+    "ageInvalid": "Invalid age",
+    "contactRequired": "Contact is required"
   },
   "footer": {
     "contact": "Contact",

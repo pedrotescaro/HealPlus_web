@@ -110,6 +110,7 @@
     "title": "Pacientes",
     "addNew": "Adicionar Paciente",
     "name": "Nome",
+    "namePlaceholder": "Digite o nome do paciente",
     "age": "Idade",
     "gender": "Gênero",
     "contact": "Contato",
@@ -118,7 +119,26 @@
     "other": "Outro",
     "viewDetails": "Ver Detalhes",
     "woundHistory": "Histórico de Feridas",
-    "newAssessment": "Nova Avaliação"
+    "newAssessment": "Nova Avaliação",
+    "patientsTotal": "pacientes no total",
+    "searchPlaceholder": "Buscar por nome ou contato...",
+    "noPatients": "Nenhum paciente cadastrado",
+    "noResults": "Nenhum resultado encontrado"
+  },
+  "assessments": {
+    "selectPatient": "Selecione o Paciente",
+    "selectPatientDesc": "Escolha o paciente para esta avaliação",
+    "searchPatient": "Buscar paciente...",
+    "imageDesc": "Faça upload de uma foto clara da ferida para análise com IA",
+    "analyzeWithAI": "Analisar com IA",
+    "timersDesc": "Preencha os dados clínicos da ferida",
+    "review": "Revisão da Avaliação",
+    "reviewDesc": "Confira os dados antes de salvar",
+    "aiAnalysis": "Análise de IA",
+    "woundType": "Tipo de Ferida",
+    "recommendations": "Recomendações",
+    "saveAssessment": "Salvar Avaliação",
+    "createNew": "Crie uma nova avaliação de ferida"
   },
   "timers": {
     "title": "Avaliação TIMERS",
@@ -266,7 +286,7 @@
     "darkMode": "Modo Escuro",
     "highContrast": "Alto Contraste",
     "apiKey": "Chave da API da IA",
-    "apiKeyDesc": "Configure sua chave de API do Google Gemini para análise de feridas",
+    "apiKeyDesc": "Configuração de IA usando Machine Learning integrado",
     "apiKeyPlaceholder": "Cole sua chave de API aqui",
     "testConnection": "Testar Conexão"
   },
@@ -278,9 +298,30 @@
   },
   "reports": {
     "title": "Relatórios",
+    "subtitle": "Visualize e compare relatórios de avaliações",
     "generate": "Gerar Relatório",
     "download": "Baixar PDF",
-    "view": "Visualizar"
+    "view": "Ver",
+    "viewAll": "Ver Todos",
+    "compare": "Comparar",
+    "exitCompare": "Sair do Modo Comparar",
+    "compareMode": "Modo Comparação",
+    "selectTwo": "Selecione 2 relatórios para comparar",
+    "compareNow": "Comparar Agora",
+    "comparisonResult": "Resultado da Comparação",
+    "comparisonComplete": "Comparação concluída!",
+    "firstAnalysis": "Primeira Análise",
+    "secondAnalysis": "Segunda Análise",
+    "evolution": "Evolução",
+    "report": "Relatório",
+    "reportDetails": "Detalhes do Relatório",
+    "aiAnalysis": "Análise de IA",
+    "classification": "Classificação",
+    "recommendations": "Recomendações",
+    "pdfGenerated": "PDF gerado com sucesso!",
+    "selectPatient": "Selecione um paciente",
+    "noReports": "Nenhum relatório encontrado",
+    "noReportsDesc": "Faça uma nova avaliação para gerar relatórios"
   },
   "faq": {
     "title": "Perguntas Frequentes",
@@ -301,7 +342,19 @@
     "logoutSuccess": "Logout realizado com sucesso!",
     "requiredFields": "Por favor, preencha todos os campos obrigatórios.",
     "invalidEmail": "Email inválido.",
-    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres."
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres.",
+    "analysisComplete": "Análise concluída com sucesso!",
+    "analysisError": "Erro ao analisar imagem",
+    "assessmentSaved": "Avaliação salva com sucesso!",
+    "noImage": "Por favor, faça upload de uma imagem",
+    "invalidImageType": "Por favor, selecione uma imagem válida",
+    "imageTooLarge": "A imagem deve ter no máximo 10MB"
+  },
+  "validation": {
+    "nameRequired": "Nome é obrigatório",
+    "ageRequired": "Idade é obrigatória",
+    "ageInvalid": "Idade inválida",
+    "contactRequired": "Contato é obrigatório"
   },
   "footer": {
     "contact": "Contato",

@@ -65,10 +65,11 @@ jwt:
 cors:
   origins: ${CORS_ORIGINS:http://localhost:3000}
 
-gemini:
-  api:
-    key: ${GEMINI_API_KEY:}
-    url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent}
+# Machine Learning Configuration (DeepLearning4J)
+ml:
+  model:
+    path: ${ML_MODEL_PATH:models/wound-classifier.zip}
+    enabled: ${ML_ENABLED:true}
 
 # Logging Configuration
 logging:
