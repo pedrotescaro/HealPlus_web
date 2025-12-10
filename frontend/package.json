@@ -11,7 +11,7 @@
     "framer-motion": "^12.23.24",
     "i18next": "^23.11.5",
     "i18next-browser-languagedetector": "^7.2.1",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^0.556.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^14.1.2",
