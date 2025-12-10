@@ -32,7 +32,13 @@ export const Logo = ({ className }) => {
                    bg-gradient-to-r 
                    from-primary-600 via-primary-500 to-primary-400 
                    dark:from-blue-400 dark:via-blue-300 dark:to-blue-200 
-                   bg-clip-text text-transparent"
+                   bg-clip-text text-transparent
+                   drop-shadow-[0_2px_4px_rgba(var(--color-primary-600),0.3)]
+                   dark:drop-shadow-none"
+        style={{ 
+          textShadow: 'var(--tw-ring-color, transparent)',
+          filter: 'drop-shadow(0 1px 2px rgba(0, 8, 12, 0.58))'
+        }}
       >
         Heal+
       </span>
