@@ -15,6 +15,8 @@ public class User {
   private String name;
   private String role;
   private String password;
+  private String googleId;
+  private String avatarUrl;
   private Instant createdAt;
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
@@ -26,6 +28,10 @@ public class User {
   public void setRole(String role) { this.role = role; }
   public String getPassword() { return password; }
   public void setPassword(String password) { this.password = password; }
+  public String getGoogleId() { return googleId; }
+  public void setGoogleId(String googleId) { this.googleId = googleId; }
+  public String getAvatarUrl() { return avatarUrl; }
+  public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
   public Instant getCreatedAt() { return createdAt; }
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

@@ -2,45 +2,85 @@ package com.healplus.security;
 
 import com.healplus.entities.User;
 import com.healplus.repositories.UserRepository;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
+@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
-  private final JwtUtil jwtUtil;
-  private final UserRepository userRepository;
 
-  public JwtAuthFilter(JwtUtil jwtUtil, UserRepository userRepository) {
-    this.jwtUtil = jwtUtil;
-    this.userRepository = userRepository;
-  }
+    private static final String BEARER_PREFIX = "Bearer ";
 
-  @Override
-  protected void doFilterInternal(@org.springframework.lang.NonNull HttpServletRequest request, @org.springframework.lang.NonNull HttpServletResponse response, @org.springframework.lang.NonNull FilterChain chain) throws ServletException, IOException {
-    String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-    if (header != null && header.startsWith("Bearer ")) {
-      String token = header.substring(7);
-      try {
-        String userId = jwtUtil.parseUserId(token);
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-          UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userOpt.get(), null, null);
-          auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-          SecurityContextHolder.getContext().setAuthentication(auth);
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain) throws ServletException, IOException {
+        try {
+            extractToken(request)
+                .flatMap(jwtUtil::parseUserId)
+                .flatMap(userRepository::findById)
+                .ifPresent(user -> setAuthentication(user, request));
+        } catch (Exception e) {
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
-      } catch (Exception ignored) {}
+
+        chain.doFilter(request, response);
     }
-    chain.doFilter(request, response);
-  }
+
+    private Optional<String> extractToken(HttpServletRequest request) {
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
+            return Optional.of(header.substring(BEARER_PREFIX.length()));
+        }
+        return Optional.empty();
+    }
+
+    private void setAuthentication(User user, HttpServletRequest request) {
+        List<SimpleGrantedAuthority> authorities = user.getRole() != null
+            ? List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()))
+            : Collections.emptyList();
+
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+            user, null, authorities
+        );
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        log.debug("Authenticated user: {} with role: {}", user.getId(), user.getRole());
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/api/auth/") ||
+               path.startsWith("/oauth2/") ||
+               path.startsWith("/login/oauth2/") ||
+               path.startsWith("/actuator/") ||
+               path.startsWith("/swagger-ui") ||
+               path.startsWith("/api-docs") ||
+               path.startsWith("/v3/api-docs") ||
+               path.startsWith("/h2-console");
+    }
 }
