@@ -2,7 +2,7 @@ package com.healplus.controllers;
 
 import com.healplus.entities.User;
 import com.healplus.repositories.PatientRepository;
-import com.healplus.repositories.mongo.WoundAnalysisRepository;
+import com.healplus.repositories.WoundAnalysisRepository;
 import com.healplus.repositories.AppointmentRepository;
 import com.healplus.entities.Appointment;
 import org.springframework.http.ResponseEntity;

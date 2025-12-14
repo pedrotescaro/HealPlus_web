@@ -1,11 +1,8 @@
 package com.healplus.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
 
-@Data
 public class PatientDtos {
-  @Data
   public static class PatientCreate {
     @NotBlank(message = "Nome é obrigatório")
     @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
@@ -22,9 +19,17 @@ public class PatientDtos {
     
     @Size(max = 20, message = "Contato deve ter no máximo 20 caracteres")
     private String contact;
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+    public String getContact() { return contact; }
+    public void setContact(String contact) { this.contact = contact; }
   }
   
-  @Data
   public static class PatientUpdate {
     @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
     private String name;
@@ -38,5 +43,14 @@ public class PatientDtos {
     
     @Size(max = 20, message = "Contato deve ter no máximo 20 caracteres")
     private String contact;
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+    public String getContact() { return contact; }
+    public void setContact(String contact) { this.contact = contact; }
   }
 }

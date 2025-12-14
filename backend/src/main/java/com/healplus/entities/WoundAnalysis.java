@@ -1,21 +1,30 @@
-package com.healplus.documents;
+package com.healplus.entities;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.Map;
 
-@Document("wound_analyses")
+@Entity
+@Table(name = "wound_analyses")
 public class WoundAnalysis {
   @Id
   private String id;
   private String patientId;
   private String professionalId;
+  
+  @Lob
+  @Column(columnDefinition = "LONGTEXT")
   private String imageBase64;
-  private Map<String, Object> timersData;
-  private Map<String, Object> aiAnalysis;
+  
+  @Lob
+  @Column(columnDefinition = "TEXT")
+  private String timersDataJson;
+  
+  @Lob
+  @Column(columnDefinition = "TEXT")
+  private String aiAnalysisJson;
+  
   private Instant createdAt;
+  
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
   public String getPatientId() { return patientId; }
@@ -24,10 +33,10 @@ public class WoundAnalysis {
   public void setProfessionalId(String professionalId) { this.professionalId = professionalId; }
   public String getImageBase64() { return imageBase64; }
   public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
-  public java.util.Map<String, Object> getTimersData() { return timersData; }
-  public void setTimersData(java.util.Map<String, Object> timersData) { this.timersData = timersData; }
-  public java.util.Map<String, Object> getAiAnalysis() { return aiAnalysis; }
-  public void setAiAnalysis(java.util.Map<String, Object> aiAnalysis) { this.aiAnalysis = aiAnalysis; }
+  public String getTimersDataJson() { return timersDataJson; }
+  public void setTimersDataJson(String timersDataJson) { this.timersDataJson = timersDataJson; }
+  public String getAiAnalysisJson() { return aiAnalysisJson; }
+  public void setAiAnalysisJson(String aiAnalysisJson) { this.aiAnalysisJson = aiAnalysisJson; }
   public Instant getCreatedAt() { return createdAt; }
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

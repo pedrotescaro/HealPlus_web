@@ -5,26 +5,19 @@ spring:
   application:
     name: healplus-backend
   datasource:
-    url: jdbc:h2:mem:healplus;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
+    url: jdbc:mysql://localhost:3306/heal_plus_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
     password: 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
         show_sql: true
         format_sql: true
     show-sql: true
-  data:
-    mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/heal_plus_db}
 
 jwt:
   secret: ${JWT_SECRET:heal_plus_dev_secret_key_for_testing_only}

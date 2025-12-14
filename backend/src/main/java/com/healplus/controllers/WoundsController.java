@@ -1,11 +1,13 @@
 package com.healplus.controllers;
 
-import com.healplus.documents.WoundAnalysis;
+import com.healplus.entities.WoundAnalysis;
 import com.healplus.dto.AIDtos;
 import com.healplus.dto.WoundDtos;
 import com.healplus.entities.User;
-import com.healplus.repositories.mongo.WoundAnalysisRepository;
+import com.healplus.repositories.WoundAnalysisRepository;
 import com.healplus.services.AIService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +22,12 @@ import java.util.UUID;
 public class WoundsController {
   private final WoundAnalysisRepository repo;
   private final AIService aiService;
+  private final ObjectMapper objectMapper;
 
-  public WoundsController(WoundAnalysisRepository repo, AIService aiService) {
+  public WoundsController(WoundAnalysisRepository repo, AIService aiService, ObjectMapper objectMapper) {
     this.repo = repo;
     this.aiService = aiService;
+    this.objectMapper = objectMapper;
   }
 
   @PostMapping("/analyze")
@@ -34,9 +38,13 @@ public class WoundsController {
     wa.setPatientId(data.getPatientId());
     wa.setProfessionalId(u.getId());
     wa.setImageBase64(data.getImageBase64());
-    wa.setTimersData(data.getTimersData());
     
-    // Realizar análise de IA
+    try {
+      wa.setTimersDataJson(objectMapper.writeValueAsString(data.getTimersData()));
+    } catch (JsonProcessingException e) {
+      wa.setTimersDataJson("{}");
+    }
+    
     String imageId = wa.getId();
     String captureDateTime = Instant.now().toString();
     Map<String, Object> aiAnalysisResult = aiService.analyzeWoundImage(
@@ -44,7 +52,12 @@ public class WoundsController {
         imageId,
         captureDateTime
     );
-    wa.setAiAnalysis(aiAnalysisResult);
+    
+    try {
+      wa.setAiAnalysisJson(objectMapper.writeValueAsString(aiAnalysisResult));
+    } catch (JsonProcessingException e) {
+      wa.setAiAnalysisJson("{}");
+    }
     
     wa.setCreatedAt(Instant.now());
     repo.save(wa);
@@ -63,16 +76,12 @@ public class WoundsController {
         .orElse(ResponseEntity.notFound().build());
   }
   
-  /**
-   * Compara duas imagens de feridas usando IA
-   */
   @PostMapping("/compare-images")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareImages(
       @jakarta.validation.Valid @RequestBody AIDtos.CompareImagesRequest request) {
     
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     
-    // Realizar comparação usando IA
     Map<String, Object> comparisonResult = aiService.compareWoundImages(
         request.getImage1Base64(),
         request.getImage1Id(),
@@ -82,35 +91,26 @@ public class WoundsController {
         request.getImage2DateTime()
     );
     
-    // Converter Map para DTO (simplificado - pode ser melhorado com mapper)
     AIDtos.CompareImagesResponse response = new AIDtos.CompareImagesResponse();
     
-    // Análise da imagem 1
     AIDtos.ImageAnalysisResponse analysis1 = convertToImageAnalysis(comparisonResult.get("analise_imagem_1"));
     response.setAnaliseImagem1(analysis1);
     
-    // Análise da imagem 2
     AIDtos.ImageAnalysisResponse analysis2 = convertToImageAnalysis(comparisonResult.get("analise_imagem_2"));
     response.setAnaliseImagem2(analysis2);
     
-    // Relatório comparativo
     AIDtos.ComparativeReport comparativeReport = convertToComparativeReport(comparisonResult.get("relatorio_comparativo"));
     response.setRelatorioComparativo(comparativeReport);
     
     return ResponseEntity.ok(response);
   }
   
-  /**
-   * Compara dois relatórios de feridas (texto + imagens) usando IA
-   */
   @PostMapping("/compare-reports")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareReports(
       @jakarta.validation.Valid @RequestBody AIDtos.CompareReportsRequest request) {
     
     User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     
-    // Por enquanto, usa a mesma lógica de comparação de imagens
-    // Pode ser expandido para incluir análise do conteúdo textual
     Map<String, Object> comparisonResult = aiService.compareWoundImages(
         request.getImage1Base64(),
         "report1",
@@ -120,7 +120,6 @@ public class WoundsController {
         request.getReport2Date()
     );
     
-    // Converter Map para DTO
     AIDtos.CompareImagesResponse response = new AIDtos.CompareImagesResponse();
     
     AIDtos.ImageAnalysisResponse analysis1 = convertToImageAnalysis(comparisonResult.get("analise_imagem_1"));
@@ -135,7 +134,6 @@ public class WoundsController {
     return ResponseEntity.ok(response);
   }
   
-  // Métodos auxiliares para conversão (simplificados)
   private AIDtos.ImageAnalysisResponse convertToImageAnalysis(Object obj) {
     if (obj instanceof Map) {
       @SuppressWarnings("unchecked")
@@ -143,7 +141,6 @@ public class WoundsController {
       AIDtos.ImageAnalysisResponse response = new AIDtos.ImageAnalysisResponse();
       response.setIdImagem((String) map.get("id_imagem"));
       response.setDataHoraCaptura((String) map.get("data_hora_captura"));
-      // Outros campos podem ser convertidos aqui
       return response;
     }
     return new AIDtos.ImageAnalysisResponse();
@@ -157,7 +154,6 @@ public class WoundsController {
       report.setPeriodoAnalise((String) map.get("periodo_analise"));
       report.setIntervaloTempo((String) map.get("intervalo_tempo"));
       report.setResumoDescritivoEvolucao((String) map.get("resumo_descritivo_evolucao"));
-      // Outros campos podem ser convertidos aqui
       return report;
     }
     return new AIDtos.ComparativeReport();

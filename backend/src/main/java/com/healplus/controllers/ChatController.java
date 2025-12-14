@@ -1,9 +1,9 @@
 package com.healplus.controllers;
 
-import com.healplus.documents.ChatMessage;
+import com.healplus.entities.ChatMessage;
 import com.healplus.dto.ChatDtos;
 import com.healplus.entities.User;
-import com.healplus.repositories.mongo.ChatMessageRepository;
+import com.healplus.repositories.ChatMessageRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

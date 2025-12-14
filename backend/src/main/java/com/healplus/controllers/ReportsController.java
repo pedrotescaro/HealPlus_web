@@ -1,11 +1,13 @@
 package com.healplus.controllers;
 
-import com.healplus.documents.Report;
-import com.healplus.documents.WoundAnalysis;
+import com.healplus.entities.Report;
+import com.healplus.entities.WoundAnalysis;
 import com.healplus.entities.Patient;
 import com.healplus.repositories.PatientRepository;
-import com.healplus.repositories.mongo.ReportRepository;
-import com.healplus.repositories.mongo.WoundAnalysisRepository;
+import com.healplus.repositories.ReportRepository;
+import com.healplus.repositories.WoundAnalysisRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -17,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,11 +30,13 @@ public class ReportsController {
   private final WoundAnalysisRepository woundRepo;
   private final ReportRepository reportRepo;
   private final PatientRepository patientRepo;
+  private final ObjectMapper objectMapper;
 
-  public ReportsController(WoundAnalysisRepository woundRepo, ReportRepository reportRepo, PatientRepository patientRepo) {
+  public ReportsController(WoundAnalysisRepository woundRepo, ReportRepository reportRepo, PatientRepository patientRepo, ObjectMapper objectMapper) {
     this.woundRepo = woundRepo;
     this.reportRepo = reportRepo;
     this.patientRepo = patientRepo;
+    this.objectMapper = objectMapper;
   }
 
   @PostMapping("/generate/{woundId}")
@@ -66,8 +71,15 @@ public class ReportsController {
     cs.setFont(PDType1Font.HELVETICA_BOLD, 14);
     cs.showText("Avaliacao TIMERS:");
     cs.setFont(PDType1Font.HELVETICA, 12);
-    Map<String, Object> t = wound.getTimersData();
-    if (t != null) {
+    
+    Map<String, Object> t = new HashMap<>();
+    if (wound.getTimersDataJson() != null && !wound.getTimersDataJson().isEmpty()) {
+      try {
+        t = objectMapper.readValue(wound.getTimersDataJson(), new TypeReference<Map<String, Object>>() {});
+      } catch (Exception ignored) {}
+    }
+    
+    if (!t.isEmpty()) {
       cs.newLineAtOffset(0, -18);
       cs.showText("Tipo de Tecido: " + String.valueOf(t.getOrDefault("tissue_type", "N/A")));
       cs.newLineAtOffset(0, -18);
