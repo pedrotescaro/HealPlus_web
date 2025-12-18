@@ -4,10 +4,15 @@ import com.healplus.entities.WoundAnalysis;
 import com.healplus.dto.AIDtos;
 import com.healplus.dto.WoundDtos;
 import com.healplus.entities.User;
+import com.healplus.exception.UnauthorizedException;
 import com.healplus.repositories.WoundAnalysisRepository;
+import com.healplus.security.InputSanitizer;
 import com.healplus.services.AIService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,29 +24,31 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/wounds")
 @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearer-jwt")
+@RequiredArgsConstructor
+@Slf4j
 public class WoundsController {
   private final WoundAnalysisRepository repo;
   private final AIService aiService;
   private final ObjectMapper objectMapper;
-
-  public WoundsController(WoundAnalysisRepository repo, AIService aiService, ObjectMapper objectMapper) {
-    this.repo = repo;
-    this.aiService = aiService;
-    this.objectMapper = objectMapper;
-  }
+  private final InputSanitizer inputSanitizer;
 
   @PostMapping("/analyze")
-  public ResponseEntity<WoundAnalysis> analyze(@jakarta.validation.Valid @RequestBody WoundDtos.WoundAnalysisCreate data) {
-    User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+  public ResponseEntity<WoundAnalysis> analyze(@Valid @RequestBody WoundDtos.WoundAnalysisCreate data) {
+    User u = getCurrentUser();
+    
+    // Validar e sanitizar patientId
+    String patientId = inputSanitizer.sanitizeId(data.getPatientId());
+    
     WoundAnalysis wa = new WoundAnalysis();
     wa.setId(UUID.randomUUID().toString());
-    wa.setPatientId(data.getPatientId());
+    wa.setPatientId(patientId);
     wa.setProfessionalId(u.getId());
     wa.setImageBase64(data.getImageBase64());
     
     try {
       wa.setTimersDataJson(objectMapper.writeValueAsString(data.getTimersData()));
     } catch (JsonProcessingException e) {
+      log.warn("Failed to serialize timers data: {}", e.getMessage());
       wa.setTimersDataJson("{}");
     }
     
@@ -56,31 +63,59 @@ public class WoundsController {
     try {
       wa.setAiAnalysisJson(objectMapper.writeValueAsString(aiAnalysisResult));
     } catch (JsonProcessingException e) {
+      log.warn("Failed to serialize AI analysis: {}", e.getMessage());
       wa.setAiAnalysisJson("{}");
     }
     
     wa.setCreatedAt(Instant.now());
     repo.save(wa);
+    
+    log.info("Wound analysis created: {} by professional: {}", wa.getId(), u.getId());
     return ResponseEntity.ok(wa);
   }
 
   @GetMapping("/patient/{patientId}")
   public ResponseEntity<List<WoundAnalysis>> listByPatient(@PathVariable String patientId) {
-    return ResponseEntity.ok(repo.findByPatientIdOrderByCreatedAtDesc(patientId));
+    User u = getCurrentUser();
+    
+    // Validar patientId
+    String sanitizedPatientId = inputSanitizer.sanitizeId(patientId);
+    
+    // Buscar análises e verificar se pertencem ao profissional
+    List<WoundAnalysis> analyses = repo.findByPatientIdOrderByCreatedAtDesc(sanitizedPatientId);
+    
+    // Filtrar apenas as análises do profissional autenticado
+    analyses = analyses.stream()
+        .filter(wa -> u.getId().equals(wa.getProfessionalId()))
+        .toList();
+    
+    return ResponseEntity.ok(analyses);
   }
   
   @GetMapping("/{woundId}")
   public ResponseEntity<WoundAnalysis> getById(@PathVariable String woundId) {
-    return repo.findById(woundId)
-        .map(ResponseEntity::ok)
+    User u = getCurrentUser();
+    
+    // Validar woundId
+    String sanitizedWoundId = inputSanitizer.sanitizeId(woundId);
+    
+    return repo.findById(sanitizedWoundId)
+        .map(wa -> {
+          // Verificar se a análise pertence ao profissional
+          if (!u.getId().equals(wa.getProfessionalId())) {
+            log.warn("Unauthorized access attempt to wound {} by {}", woundId, u.getId());
+            throw new UnauthorizedException("Você não tem permissão para acessar esta análise");
+          }
+          return ResponseEntity.ok(wa);
+        })
         .orElse(ResponseEntity.notFound().build());
   }
   
   @PostMapping("/compare-images")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareImages(
-      @jakarta.validation.Valid @RequestBody AIDtos.CompareImagesRequest request) {
+      @Valid @RequestBody AIDtos.CompareImagesRequest request) {
     
-    User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    User u = getCurrentUser();
     
     Map<String, Object> comparisonResult = aiService.compareWoundImages(
         request.getImage1Base64(),
@@ -102,14 +137,15 @@ public class WoundsController {
     AIDtos.ComparativeReport comparativeReport = convertToComparativeReport(comparisonResult.get("relatorio_comparativo"));
     response.setRelatorioComparativo(comparativeReport);
     
+    log.info("Image comparison performed by professional: {}", u.getId());
     return ResponseEntity.ok(response);
   }
   
   @PostMapping("/compare-reports")
   public ResponseEntity<AIDtos.CompareImagesResponse> compareReports(
-      @jakarta.validation.Valid @RequestBody AIDtos.CompareReportsRequest request) {
+      @Valid @RequestBody AIDtos.CompareReportsRequest request) {
     
-    User u = (User) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    User u = getCurrentUser();
     
     Map<String, Object> comparisonResult = aiService.compareWoundImages(
         request.getImage1Base64(),
@@ -131,7 +167,13 @@ public class WoundsController {
     AIDtos.ComparativeReport comparativeReport = convertToComparativeReport(comparisonResult.get("relatorio_comparativo"));
     response.setRelatorioComparativo(comparativeReport);
     
+    log.info("Report comparison performed by professional: {}", u.getId());
     return ResponseEntity.ok(response);
+  }
+  
+  private User getCurrentUser() {
+    return (User) org.springframework.security.core.context.SecurityContextHolder
+        .getContext().getAuthentication().getPrincipal();
   }
   
   private AIDtos.ImageAnalysisResponse convertToImageAnalysis(Object obj) {

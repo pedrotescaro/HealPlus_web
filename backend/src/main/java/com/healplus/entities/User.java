@@ -1,8 +1,14 @@
 package com.healplus.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
@@ -11,13 +17,34 @@ import java.time.Instant;
 public class User {
   @Id
   private String id;
+  
+  @Email
+  @NotBlank
+  @Size(max = 100)
+  @Column(unique = true)
   private String email;
+  
+  @NotBlank
+  @Size(min = 2, max = 100)
   private String name;
+  
+  @Size(max = 20)
   private String role;
+  
+  // Senha NUNCA deve ser exposta em respostas JSON
+  @JsonIgnore
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private String password;
+  
+  @Column(name = "google_id")
   private String googleId;
+  
+  @Column(name = "avatar_url")
   private String avatarUrl;
+  
+  @Column(name = "created_at")
   private Instant createdAt;
+  
   public String getId() { return id; }
   public void setId(String id) { this.id = id; }
   public String getEmail() { return email; }

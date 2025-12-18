@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,7 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
   
     private final AuthService authService;
@@ -26,9 +28,11 @@ public class AuthController {
     @Operation(summary = "Register new user", description = "Creates a new user account in the system")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "User registered successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid data or email already exists")
+        @ApiResponse(responseCode = "400", description = "Invalid data or email already exists"),
+        @ApiResponse(responseCode = "429", description = "Too many requests")
     })
     public ResponseEntity<AuthDtos.TokenResponse> register(@Valid @RequestBody AuthDtos.UserCreate data) {
+        log.info("Registration request for email: {}", data.getEmail());
         return ResponseEntity.ok(authService.register(data));
     }
 
@@ -36,9 +40,11 @@ public class AuthController {
     @Operation(summary = "User login", description = "Authenticates a user and returns a JWT token")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Login successful"),
-        @ApiResponse(responseCode = "401", description = "Invalid credentials")
+        @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+        @ApiResponse(responseCode = "429", description = "Too many requests - possible brute force attack")
     })
     public ResponseEntity<AuthDtos.TokenResponse> login(@Valid @RequestBody AuthDtos.UserLogin data) {
+        log.info("Login attempt for email: {}", data.getEmail());
         return ResponseEntity.ok(authService.login(data));
     }
 
@@ -64,7 +70,13 @@ public class AuthController {
 
     @PostMapping("/google/callback")
     @Operation(summary = "Google OAuth callback", description = "Handles the Google OAuth callback with user info")
-    public ResponseEntity<AuthDtos.TokenResponse> googleCallback(@RequestBody AuthDtos.GoogleAuthRequest request) {
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "OAuth login successful"),
+        @ApiResponse(responseCode = "400", description = "Invalid OAuth data")
+    })
+    public ResponseEntity<AuthDtos.TokenResponse> googleCallback(
+            @Valid @RequestBody AuthDtos.GoogleAuthRequest request) {
+        log.info("Google OAuth login for email: {}", request.getEmail());
         return ResponseEntity.ok(authService.loginWithGoogle(
             request.getEmail(),
             request.getName(),

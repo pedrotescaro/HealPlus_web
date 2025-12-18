@@ -1,0 +1,87 @@
+# Production Configuration - TODAS as configurações sensíveis devem vir de variáveis de ambiente!
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: strict
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+
+spring:
+  application:
+    name: healplus-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+  h2:
+    console:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+
+# Actuator - mínimo em produção
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+# Swagger - desabilitado em produção
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+# JWT - OBRIGATÓRIO configurar via variável de ambiente!
+jwt:
+  secret: ${JWT_SECRET}
+  expirationHours: ${JWT_EXPIRATION_HOURS:8}
+
+cors:
+  origins: ${CORS_ORIGINS}
+
+# Machine Learning
+ml:
+  model:
+    path: ${ML_MODEL_PATH:models/wound-classifier.zip}
+    enabled: ${ML_ENABLED:true}
+
+# Logging - sem dados sensíveis
+logging:
+  level:
+    root: WARN
+    com.healplus: INFO
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"
