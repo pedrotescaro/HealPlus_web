@@ -84,6 +84,13 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET:CHANGE_THIS_SECRET_IN_PRODUCTION_MINIMUM_64_CHARACTERS_LONG_VERY_SECURE}
   expirationHours: ${JWT_EXPIRATION_HOURS:24}
+  refreshExpirationDays: ${JWT_REFRESH_EXPIRATION_DAYS:30}
+
+# Cookie Configuration
+cookie:
+  secure: ${COOKIE_SECURE:false}
+  sameSite: strict
+  httpOnly: true
 
 # CORS Configuration
 cors:

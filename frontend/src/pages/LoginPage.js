@@ -54,7 +54,11 @@ const LoginPage = () => {
       await login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || t('messages.loginFailed');
+      // Tratamento de erro padronizado
+      const errorMessage = err.message || 
+                          err.response?.data?.message || 
+                          err.response?.data?.detail || 
+                          t('messages.loginFailed');
       setError(errorMessage);
     } finally {
       setLoading(false);

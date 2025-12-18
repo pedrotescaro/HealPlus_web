@@ -1,0 +1,63 @@
+# Test Configuration - Usando H2 em memória para testes
+
+server:
+  port: 0  # Porta aleatória para testes
+
+spring:
+  application:
+    name: healplus-backend-test
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    open-in-view: false
+
+# JWT Configuration
+jwt:
+  secret: test_secret_key_for_integration_tests_minimum_64_characters_long_very_secure
+  expirationHours: 24
+  refreshExpirationDays: 30
+
+# Cookie Configuration
+cookie:
+  secure: false
+  sameSite: strict
+  httpOnly: true
+
+# CORS Configuration - Permitir localhost para testes
+cors:
+  origins: http://localhost:3000,http://localhost:8080
+
+# Logging - Mínimo para testes
+logging:
+  level:
+    root: WARN
+    com.healplus: INFO
+    org.springframework.security: WARN
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+# ML - Desabilitado para testes
+ml:
+  enabled: false
+
+# Swagger - Desabilitado para testes
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

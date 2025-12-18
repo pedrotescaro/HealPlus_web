@@ -1,39 +1,198 @@
 import axios from 'axios';
 
+// ==================== Configuração Base ====================
+
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
 const DEMO_MODE = String(process.env.REACT_APP_DEMO_MODE).toLowerCase() === 'true';
 
+/**
+ * Instância Axios configurada com:
+ * - withCredentials para enviar cookies automaticamente
+ * - Interceptors para refresh token automático
+ * - Tratamento de erros padronizado
+ */
 const api = axios.create({
   baseURL: `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   timeout: 30000,
+  withCredentials: true, // IMPORTANTE: Envia cookies automaticamente
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// ==================== Interceptors ====================
 
+// Flag para evitar múltiplas tentativas de refresh simultâneas
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Request Interceptor - Adiciona token se disponível (fallback para localStorage em desenvolvimento)
+api.interceptors.request.use(
+  (config) => {
+    // Em modo cookie, o token é enviado automaticamente via cookie HttpOnly
+    // Este fallback é para compatibilidade durante transição
+    const token = localStorage.getItem('healplus_token');
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor - Tratamento de erros e refresh token
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error?.response?.status;
-    if (status === 401) {
-      localStorage.removeItem('token');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+  (response) => {
+    // Extrair dados do formato padronizado se existir
+    if (response.data && response.data.status === 'success') {
+      // Manter estrutura original mas facilitar acesso aos dados
+      response.apiData = response.data.data;
+      response.apiMessage = response.data.message;
+    }
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Se for 401 e não for uma tentativa de refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Se já está fazendo refresh, aguardar na fila
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => api(originalRequest));
+      }
+      
+      originalRequest._retry = true;
+      isRefreshing = true;
+      
+      try {
+        // Tentar refresh token
+        const refreshResponse = await api.post('/auth/refresh');
+        
+        if (refreshResponse.data?.status === 'success') {
+          processQueue(null);
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        // Limpar dados locais e redirecionar para login
+        handleAuthFailure();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
-    return Promise.reject(error);
+    
+    // Tratamento de erro 403 (Forbidden)
+    if (error.response?.status === 403) {
+      console.error('Acesso negado');
+    }
+    
+    // Tratamento de erro 500 (Server Error)
+    if (error.response?.status >= 500) {
+      console.error('Erro interno do servidor');
+    }
+    
+    return Promise.reject(formatError(error));
   }
 );
 
-// Demo data
+// ==================== Helpers ====================
+
+/**
+ * Limpa dados de autenticação e redireciona para login
+ */
+const handleAuthFailure = () => {
+  localStorage.removeItem('healplus_token');
+  localStorage.removeItem('healplus_user');
+  
+  // Dispara evento customizado para o AuthContext
+  window.dispatchEvent(new CustomEvent('auth:logout'));
+  
+  // Redirecionar apenas se não estiver na página de login
+  if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+    window.location.href = '/login?session=expired';
+  }
+};
+
+/**
+ * Formata erros da API para um formato consistente
+ */
+const formatError = (error) => {
+  const response = error.response;
+  
+  if (!response) {
+    return {
+      status: 'error',
+      message: 'Erro de conexão. Verifique sua internet.',
+      code: 'NETWORK_ERROR',
+      errors: [],
+    };
+  }
+  
+  // Se a resposta já está no formato padronizado
+  if (response.data?.status === 'error') {
+    return {
+      status: 'error',
+      message: response.data.message || 'Erro desconhecido',
+      code: response.status,
+      errors: response.data.errors || [],
+    };
+  }
+  
+  // Mapear códigos HTTP para mensagens amigáveis
+  const messageMap = {
+    400: 'Dados inválidos. Verifique os campos.',
+    401: 'Sessão expirada. Faça login novamente.',
+    403: 'Você não tem permissão para esta ação.',
+    404: 'Recurso não encontrado.',
+    422: 'Dados inválidos. Verifique os campos.',
+    429: 'Muitas tentativas. Aguarde um momento.',
+    500: 'Erro interno. Tente novamente mais tarde.',
+    502: 'Serviço indisponível. Tente novamente.',
+    503: 'Serviço em manutenção. Tente mais tarde.',
+  };
+  
+  return {
+    status: 'error',
+    message: messageMap[response.status] || 'Erro desconhecido',
+    code: response.status,
+    errors: [],
+  };
+};
+
+/**
+ * Extrai dados da resposta padronizada
+ */
+export const extractData = (response) => {
+  if (response.data?.status === 'success') {
+    return response.data.data;
+  }
+  return response.data;
+};
+
+/**
+ * Verifica se a resposta foi bem-sucedida
+ */
+export const isSuccess = (response) => {
+  return response.data?.status === 'success' || (response.status >= 200 && response.status < 300);
+};
+
+// ==================== Demo Data ====================
+
 const demoUser = {
   id: 'demo-user',
   name: 'Visitante',
@@ -110,75 +269,151 @@ const demoStats = {
   upcoming_appointments: demoAppointments,
 };
 
-// Auth Services
+// ==================== Auth Services ====================
+
 export const authService = {
+  /**
+   * Login com email e senha
+   * Tokens são armazenados em cookies HttpOnly automaticamente
+   */
   login: async (email, password) => {
     if (DEMO_MODE) {
       return { token: demoToken, user: demoUser };
     }
     const response = await api.post('/auth/login', { email, password });
-    return response.data;
+    const data = extractData(response);
+    
+    // Armazenar token como fallback (o principal está no cookie)
+    if (data.token) {
+      localStorage.setItem('healplus_token', data.token);
+    }
+    
+    return data;
   },
   
-  register: async (email, password, name, role) => {
+  /**
+   * Registro de novo usuário
+   */
+  register: async (email, password, name, role = 'professional') => {
     if (DEMO_MODE) {
       return { token: demoToken, user: { ...demoUser, name, email, role } };
     }
     const response = await api.post('/auth/register', { email, password, name, role });
-    return response.data;
+    const data = extractData(response);
+    
+    if (data.token) {
+      localStorage.setItem('healplus_token', data.token);
+    }
+    
+    return data;
   },
   
-  getMe: async (token) => {
+  /**
+   * Obtém dados do usuário atual
+   */
+  getMe: async () => {
     if (DEMO_MODE) {
       return demoUser;
     }
-    const response = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get('/auth/me');
+    return extractData(response);
+  },
+  
+  /**
+   * Renova tokens usando refresh token (cookie)
+   */
+  refresh: async () => {
+    if (DEMO_MODE) {
+      return { token: demoToken, user: demoUser };
+    }
+    const response = await api.post('/auth/refresh');
+    const data = extractData(response);
+    
+    if (data.token) {
+      localStorage.setItem('healplus_token', data.token);
+    }
+    
+    return data;
+  },
+  
+  /**
+   * Logout - revoga tokens e limpa cookies
+   */
+  logout: async () => {
+    if (DEMO_MODE) {
+      localStorage.removeItem('healplus_token');
+      return { success: true };
+    }
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      localStorage.removeItem('healplus_token');
+      localStorage.removeItem('healplus_user');
+    }
+    return { success: true };
+  },
+  
+  /**
+   * Verifica status de autenticação
+   */
+  checkAuth: async () => {
+    if (DEMO_MODE) {
+      return { authenticated: true, user: demoUser };
+    }
+    const response = await api.get('/auth/check');
+    return extractData(response);
   },
 
+  /**
+   * Login anônimo para modo demo
+   */
   anonymousLogin: async () => {
     return { token: demoToken, user: demoUser };
   },
+
+  /**
+   * Obtém URL para login com Google
+   */
+  getGoogleAuthUrl: async () => {
+    if (DEMO_MODE) {
+      return { url: '/demo/google', provider: 'google' };
+    }
+    const response = await api.get('/auth/google/url');
+    return extractData(response);
+  },
 };
 
-// Patient Services
+// ==================== Patient Services ====================
+
 export const patientService = {
-  getAll: async (token) => {
+  getAll: async () => {
     if (DEMO_MODE) {
       return demoPatients;
     }
-    const response = await api.get('/patients', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get('/patients');
+    return extractData(response);
   },
   
-  getById: async (id, token) => {
+  getById: async (id) => {
     if (DEMO_MODE) {
       return demoPatients.find(p => p.id === id) || null;
     }
-    const response = await api.get(`/patients/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/patients/${id}`);
+    return extractData(response);
   },
   
-  create: async (data, token) => {
+  create: async (data) => {
     if (DEMO_MODE) {
       const newPatient = { id: `p${demoPatients.length + 1}`, ...data };
       demoPatients = [newPatient, ...demoPatients];
       demoStats.total_patients = demoPatients.length;
       return newPatient;
     }
-    const response = await api.post('/patients', data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/patients', data);
+    return extractData(response);
   },
 
-  update: async (id, data, token) => {
+  update: async (id, data) => {
     if (DEMO_MODE) {
       const index = demoPatients.findIndex(p => p.id === id);
       if (index !== -1) {
@@ -187,28 +422,25 @@ export const patientService = {
       }
       return null;
     }
-    const response = await api.put(`/patients/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.put(`/patients/${id}`, data);
+    return extractData(response);
   },
 
-  delete: async (id, token) => {
+  delete: async (id) => {
     if (DEMO_MODE) {
       demoPatients = demoPatients.filter(p => p.id !== id);
       demoStats.total_patients = demoPatients.length;
       return { success: true };
     }
-    const response = await api.delete(`/patients/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.delete(`/patients/${id}`);
+    return extractData(response);
   },
 };
 
-// Wound Analysis Services (ML-powered)
+// ==================== Wound Analysis Services (ML-powered) ====================
+
 export const woundService = {
-  analyze: async (data, token) => {
+  analyze: async (data) => {
     if (DEMO_MODE) {
       const newAnalysis = {
         id: `w${demoWoundAnalyses.length + 1}`,
@@ -243,33 +475,27 @@ export const woundService = {
       demoStats.total_analyses = demoWoundAnalyses.length;
       return newAnalysis;
     }
-    const response = await api.post('/wounds/analyze', data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/wounds/analyze', data);
+    return extractData(response);
   },
   
-  getPatientWounds: async (patientId, token) => {
+  getPatientWounds: async (patientId) => {
     if (DEMO_MODE) {
       return demoWoundAnalyses.filter(w => w.patientId === patientId);
     }
-    const response = await api.get(`/wounds/patient/${patientId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/wounds/patient/${patientId}`);
+    return extractData(response);
   },
 
-  getById: async (woundId, token) => {
+  getById: async (woundId) => {
     if (DEMO_MODE) {
       return demoWoundAnalyses.find(w => w.id === woundId) || null;
     }
-    const response = await api.get(`/wounds/${woundId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/wounds/${woundId}`);
+    return extractData(response);
   },
 
-  compareImages: async (data, token) => {
+  compareImages: async (data) => {
     if (DEMO_MODE) {
       return {
         analiseImagem1: {
@@ -287,13 +513,11 @@ export const woundService = {
         }
       };
     }
-    const response = await api.post('/wounds/compare-images', data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/wounds/compare-images', data);
+    return extractData(response);
   },
 
-  compareReports: async (data, token) => {
+  compareReports: async (data) => {
     if (DEMO_MODE) {
       return {
         analiseImagem1: { idImagem: 'report1', dataHoraCaptura: data.report1Date },
@@ -304,16 +528,15 @@ export const woundService = {
         }
       };
     }
-    const response = await api.post('/wounds/compare-reports', data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/wounds/compare-reports', data);
+    return extractData(response);
   },
 };
 
-// ML Analysis Services (direct access to ML endpoints)
+// ==================== ML Analysis Services ====================
+
 export const mlService = {
-  analyzeImage: async (image, token) => {
+  analyzeImage: async (image) => {
     if (DEMO_MODE) {
       return {
         woundType: 'PRESSURE_ULCER',
@@ -355,10 +578,8 @@ export const mlService = {
         }
       };
     }
-    const response = await api.post('/ml/analyze/base64', { image }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/ml/analyze/base64', { image });
+    return extractData(response);
   },
 
   getMLHealth: async () => {
@@ -371,13 +592,14 @@ export const mlService = {
       };
     }
     const response = await api.get('/ml/health');
-    return response.data;
+    return extractData(response);
   },
 };
 
-// Report Services
+// ==================== Report Services ====================
+
 export const reportService = {
-  generate: async (woundId, token) => {
+  generate: async (woundId) => {
     if (DEMO_MODE) {
       return { 
         report_id: `r-${woundId}`, 
@@ -385,13 +607,11 @@ export const reportService = {
         createdAt: new Date().toISOString()
       };
     }
-    const response = await api.post(`/reports/generate/${woundId}`, {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post(`/reports/generate/${woundId}`);
+    return extractData(response);
   },
 
-  getAll: async (token) => {
+  getAll: async () => {
     if (DEMO_MODE) {
       return demoWoundAnalyses.map(w => ({
         id: `r-${w.id}`,
@@ -400,37 +620,33 @@ export const reportService = {
         createdAt: w.createdAt
       }));
     }
-    const response = await api.get('/reports', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get('/reports');
+    return extractData(response);
   },
 
-  getById: async (reportId, token) => {
+  getById: async (reportId) => {
     if (DEMO_MODE) {
       return { id: reportId, url: '/demo/report.pdf' };
     }
-    const response = await api.get(`/reports/${reportId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/reports/${reportId}`);
+    return extractData(response);
   },
 
-  downloadPDF: async (reportId, token) => {
+  downloadPDF: async (reportId) => {
     if (DEMO_MODE) {
       return { url: '/demo/report.pdf' };
     }
     const response = await api.get(`/reports/${reportId}/pdf`, {
-      headers: { Authorization: `Bearer ${token}` },
       responseType: 'blob',
     });
     return response.data;
   },
 };
 
-// Chat Services
+// ==================== Chat Services ====================
+
 export const chatService = {
-  sendMessage: async (message, sessionId, token) => {
+  sendMessage: async (message, sessionId) => {
     if (DEMO_MODE) {
       const responses = [
         'Entendi sua pergunta. Com base no protocolo TIMERS, a avaliação da ferida deve considerar vários aspectos clínicos.',
@@ -443,29 +659,26 @@ export const chatService = {
         reply: responses[Math.floor(Math.random() * responses.length)]
       };
     }
-    const response = await api.post('/chat', { message, session_id: sessionId }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/chat', { message, session_id: sessionId });
+    return extractData(response);
   },
   
-  getHistory: async (sessionId, token) => {
+  getHistory: async (sessionId) => {
     if (DEMO_MODE) {
       return [
         { role: 'user', content: 'Olá!' },
         { role: 'assistant', content: 'Olá! Sou o Zelo, seu assistente médico. Como posso ajudar?' },
       ];
     }
-    const response = await api.get(`/chat/history/${sessionId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/chat/history/${sessionId}`);
+    return extractData(response);
   },
 };
 
-// Appointment Services
+// ==================== Appointment Services ====================
+
 export const appointmentService = {
-  create: async (data, token) => {
+  create: async (data) => {
     if (DEMO_MODE) {
       const newAppt = { 
         id: `a${demoAppointments.length + 1}`,
@@ -476,35 +689,29 @@ export const appointmentService = {
       demoStats.upcoming_appointments = demoAppointments;
       return newAppt;
     }
-    const response = await api.post('/appointments', data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.post('/appointments', data);
+    return extractData(response);
   },
   
-  getAll: async (token) => {
+  getAll: async () => {
     if (DEMO_MODE) {
       return demoAppointments;
     }
-    const response = await api.get('/appointments', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get('/appointments');
+    return extractData(response);
   },
 
-  getByDate: async (date, token) => {
+  getByDate: async (date) => {
     if (DEMO_MODE) {
       return demoAppointments.filter(a => 
         new Date(a.scheduled_date).toDateString() === new Date(date).toDateString()
       );
     }
-    const response = await api.get(`/appointments/date/${date}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get(`/appointments/date/${date}`);
+    return extractData(response);
   },
 
-  update: async (id, data, token) => {
+  update: async (id, data) => {
     if (DEMO_MODE) {
       const index = demoAppointments.findIndex(a => a.id === id);
       if (index !== -1) {
@@ -513,27 +720,24 @@ export const appointmentService = {
       }
       return null;
     }
-    const response = await api.put(`/appointments/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.put(`/appointments/${id}`, data);
+    return extractData(response);
   },
 
-  delete: async (id, token) => {
+  delete: async (id) => {
     if (DEMO_MODE) {
       demoAppointments = demoAppointments.filter(a => a.id !== id);
       return { success: true };
     }
-    const response = await api.delete(`/appointments/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.delete(`/appointments/${id}`);
+    return extractData(response);
   },
 };
 
-// Dashboard Services
+// ==================== Dashboard Services ====================
+
 export const dashboardService = {
-  getStats: async (token) => {
+  getStats: async () => {
     if (DEMO_MODE) {
       return {
         ...demoStats,
@@ -541,14 +745,13 @@ export const dashboardService = {
         total_patients: demoPatients.length,
       };
     }
-    const response = await api.get('/dashboard/stats', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
+    const response = await api.get('/dashboard/stats');
+    return extractData(response);
   },
 };
 
-// System Services
+// ==================== System Services ====================
+
 export const systemService = {
   health: async () => {
     try {

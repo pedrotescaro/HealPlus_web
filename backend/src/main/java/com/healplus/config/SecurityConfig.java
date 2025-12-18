@@ -45,7 +45,9 @@ public class SecurityConfig {
     private static final List<String> PUBLIC_PATHS = List.of(
         "/api/auth/login",
         "/api/auth/register",
+        "/api/auth/refresh",
         "/api/auth/google/**",
+        "/api/auth/check",
         "/actuator/health",
         "/actuator/info",
         "/swagger-ui/**",

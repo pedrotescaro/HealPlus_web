@@ -4,6 +4,7 @@ import com.healplus.entities.User;
 import com.healplus.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.Optional;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ACCESS_TOKEN_COOKIE = "healplus_access_token";
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
@@ -38,6 +40,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
         try {
+            // Tentar extrair token do header Authorization primeiro, depois do cookie
             extractToken(request)
                 .flatMap(jwtUtil::parseUserId)
                 .flatMap(userRepository::findById)
@@ -50,10 +53,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private Optional<String> extractToken(HttpServletRequest request) {
+        // 1. Tentar header Authorization (Bearer token)
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
             return Optional.of(header.substring(BEARER_PREFIX.length()));
         }
+        
+        // 2. Tentar cookie HttpOnly
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
+                    String cookieValue = cookie.getValue();
+                    if (StringUtils.hasText(cookieValue)) {
+                        return Optional.of(cookieValue);
+                    }
+                }
+            }
+        }
+        
         return Optional.empty();
     }
 
@@ -74,7 +92,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/") ||
+        return path.startsWith("/api/auth/login") ||
+               path.startsWith("/api/auth/register") ||
+               path.startsWith("/api/auth/refresh") ||
+               path.startsWith("/api/auth/google") ||
                path.startsWith("/oauth2/") ||
                path.startsWith("/login/oauth2/") ||
                path.startsWith("/actuator/") ||
