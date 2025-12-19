@@ -478,6 +478,141 @@ export const woundService = {
     const response = await api.post('/wounds/analyze', data);
     return extractData(response);
   },
+
+  // Análise completa com multimodal + explicação XAI
+  analyzeComplete: async (data) => {
+    if (DEMO_MODE) {
+      return {
+        id: `analysis-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        classification: {
+          woundType: 'Lesão por Pressão',
+          stage: 'Estágio II',
+          healingPhase: 'Proliferação'
+        },
+        confidence: 0.87,
+        tissueSegmentation: {
+          granulation: 45.5,
+          epithelialization: 22.3,
+          slough: 18.7,
+          necrosis: 5.2,
+          fibrin: 8.3
+        },
+        exudate: {
+          amount: 'moderate',
+          type: 'serous',
+          odor: 'Ausente',
+          color: 'Amarelo claro'
+        },
+        recommendations: [
+          { 
+            title: 'Desbridamento autolítico',
+            description: 'Considerar uso de hidrogel para remoção de tecido desvitalizado',
+            priority: 'high',
+            products: ['Hidrogel', 'Curativo de alginato']
+          },
+          {
+            title: 'Manutenção do meio úmido',
+            description: 'Utilizar coberturas que mantenham umidade ideal para cicatrização',
+            priority: 'medium',
+            products: ['Espuma de poliuretano', 'Hidrocolóide']
+          },
+          {
+            title: 'Alívio de pressão',
+            description: 'Reposicionar paciente a cada 2 horas e utilizar superfícies de suporte',
+            priority: 'high',
+            products: ['Colchão pneumático', 'Coxins de posicionamento']
+          }
+        ],
+        riskAssessment: {
+          infectionRisk: 'low',
+          healingPotential: 'good',
+          complicationRisk: 'moderate'
+        },
+        explanation: {
+          narrative: 'A análise identificou predominância de tecido de granulação (45.5%), indicando boa resposta cicatricial. Presença de esfacelo (18.7%) sugere necessidade de desbridamento. O padrão de classificação como Lesão por Pressão Estágio II foi determinado pela profundidade parcial da lesão e exposição de derme.',
+          keyFactors: [
+            'Alta porcentagem de granulação indica cicatrização ativa',
+            'Esfacelo presente requer atenção para desbridamento',
+            'Bordas definidas favorecem epitelização'
+          ],
+          disclaimer: 'Esta análise é gerada por IA e serve como suporte à decisão clínica. Não substitui avaliação profissional qualificada.'
+        }
+      };
+    }
+    const response = await api.post('/ml/analyze/complete', data);
+    return extractData(response);
+  },
+
+  // Salvar avaliação completa
+  saveAssessment: async (data) => {
+    if (DEMO_MODE) {
+      const assessment = {
+        id: `assessment-${Date.now()}`,
+        ...data,
+        createdAt: new Date().toISOString()
+      };
+      demoWoundAnalyses = [assessment, ...demoWoundAnalyses];
+      return assessment;
+    }
+    const response = await api.post('/wounds/assessments', data);
+    return extractData(response);
+  },
+
+  // Obter análise temporal de evolução
+  getTemporalAnalysis: async (patientId) => {
+    if (DEMO_MODE) {
+      return {
+        patientId,
+        assessments: [
+          {
+            id: 'a1',
+            date: new Date(Date.now() - 0 * 24 * 60 * 60 * 1000).toISOString(),
+            area: 8.5,
+            granulation: 55,
+            score: 72,
+            trend: 'improving'
+          },
+          {
+            id: 'a2',
+            date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            area: 10.2,
+            granulation: 48,
+            score: 65,
+            trend: 'stable'
+          },
+          {
+            id: 'a3',
+            date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+            area: 12.8,
+            granulation: 35,
+            score: 52,
+            trend: 'worsening'
+          },
+          {
+            id: 'a4',
+            date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+            area: 14.5,
+            granulation: 25,
+            score: 45,
+            trend: 'stable'
+          }
+        ],
+        prognosis: {
+          level: 'good',
+          label: 'Bom Prognóstico',
+          description: 'A ferida apresenta evolução positiva consistente nas últimas avaliações, com redução de área e aumento de tecido de granulação.',
+          recommendations: [
+            'Manter protocolo atual de tratamento',
+            'Continuar monitoramento semanal',
+            'Avaliar possibilidade de reduzir frequência de trocas'
+          ]
+        }
+      };
+    }
+    const response = await api.get(`/ml/analyze/temporal/${patientId}`);
+    return extractData(response);
+  },
   
   getPatientWounds: async (patientId) => {
     if (DEMO_MODE) {
