@@ -93,10 +93,10 @@ const LoginPage = () => {
   };
 
   const features = [
-    { icon: Brain, text: 'Análise com IA avançada' },
-    { icon: FileText, text: 'Relatórios automáticos' },
-    { icon: Activity, text: 'Acompanhamento em tempo real' },
-    { icon: Shield, text: 'Dados seguros e protegidos' },
+    { icon: Brain, text: t('features.aiAnalysis') },
+    { icon: FileText, text: t('features.autoReports') },
+    { icon: Activity, text: t('features.realTimeTracking') },
+    { icon: Shield, text: t('features.secureData') },
   ];
 
   return (
@@ -120,7 +120,7 @@ const LoginPage = () => {
           className="absolute top-8 left-8 text-white/80 hover:text-white transition-colors flex items-center z-10 group"
         >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> 
-          <span className="font-medium">Voltar</span>
+          <span className="font-medium">{t('auth.back')}</span>
         </motion.button>
 
         {/* Conteúdo Central */}
@@ -137,11 +137,11 @@ const LoginPage = () => {
             </div>
             
             <h2 className="text-4xl xl:text-5xl font-extrabold mb-4 text-white leading-tight">
-              Bem-vindo à plataforma de 
-              <span className="block bg-gradient-to-r from-primary-200 via-primary-100 to-white bg-clip-text text-transparent">saúde inteligente</span>
+              {t('auth.welcomePlatform')}
+              <span className="block bg-gradient-to-r from-primary-200 via-primary-100 to-white bg-clip-text text-transparent">{t('auth.smartHealth')}</span>
             </h2>
             <p className="text-primary-100/90 text-lg xl:text-xl max-w-lg leading-relaxed">
-              Gestão e análise de feridas com tecnologia de ponta e inteligência artificial.
+              {t('auth.platformDescription')}
             </p>
           </motion.div>
           
@@ -174,7 +174,7 @@ const LoginPage = () => {
           transition={{ delay: 0.8 }}
           className="text-sm text-white/60 z-10"
         >
-          © 2025 Heal+. Todos os direitos reservados.
+          © 2025 Heal+. {t('auth.allRightsReserved')}
         </motion.div>
       </div>
       
@@ -190,16 +190,16 @@ const LoginPage = () => {
           {/* Botão Voltar (Mobile) */}
           <button onClick={() => navigate('/')} className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center mb-8 group">
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-medium">Voltar</span>
+            <span className="font-medium">{t('auth.back')}</span>
           </button>
 
           {/* Header do formulário */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Bem-vindo(a) de volta
+              {t('auth.welcomeBack')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Insira suas credenciais para acessar sua conta
+              {t('auth.enterCredentials')}
             </p>
           </div>
 
@@ -217,7 +217,7 @@ const LoginPage = () => {
             {/* Campo Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
+                {t('auth.email')}
               </label>
               <Input
                 id="email"
@@ -234,7 +234,7 @@ const LoginPage = () => {
             {/* Campo Senha */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Senha
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <Input
@@ -251,7 +251,7 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showPassword ? t('common.hidePassword') : t('common.showPassword')}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -265,7 +265,7 @@ const LoginPage = () => {
               loading={loading}
               disabled={loading}
             >
-              {loading ? t('auth.loggingIn') : 'Entrar'}
+              {loading ? t('common.loading') : t('auth.loginButton')}
             </Button>
           </form>
 
@@ -273,7 +273,7 @@ const LoginPage = () => {
           <div className="flex items-center my-8">
             <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
             <span className="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-sm font-medium">
-              ou continue com
+              {t('auth.orContinueWith')}
             </span>
             <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
           </div>
@@ -313,16 +313,16 @@ const LoginPage = () => {
               disabled={loading}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Entrar como visitante (modo demo)
+              {t('auth.enterDemo')}
             </Button>
           )}
 
           {/* Link para Cadastro */}
           <div className="mt-8 text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Não tem uma conta?{' '}
+              {t('auth.noAccount')}{' '}
               <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-semibold transition-colors">
-                Cadastre-se
+                {t('auth.registerHere')}
               </Link>
             </p>
           </div>

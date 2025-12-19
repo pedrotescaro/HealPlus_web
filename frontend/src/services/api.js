@@ -440,6 +440,26 @@ export const patientService = {
 // ==================== Wound Analysis Services (ML-powered) ====================
 
 export const woundService = {
+  // Listar todas as avaliações
+  getAll: async () => {
+    if (DEMO_MODE) {
+      return demoWoundAnalyses;
+    }
+    const response = await api.get('/wounds/assessments');
+    return extractData(response);
+  },
+
+  // Excluir avaliação
+  delete: async (id) => {
+    if (DEMO_MODE) {
+      demoWoundAnalyses = demoWoundAnalyses.filter(w => w.id !== id);
+      demoStats.total_analyses = demoWoundAnalyses.length;
+      return { success: true };
+    }
+    const response = await api.delete(`/wounds/assessments/${id}`);
+    return extractData(response);
+  },
+
   analyze: async (data) => {
     if (DEMO_MODE) {
       const newAnalysis = {

@@ -90,10 +90,10 @@ const RegisterPage = () => {
   };
 
   const features = [
-    { icon: Brain, text: 'Análise com IA avançada' },
-    { icon: FileText, text: 'Relatórios automáticos' },
-    { icon: Activity, text: 'Acompanhamento em tempo real' },
-    { icon: Shield, text: 'Dados seguros e protegidos' },
+    { icon: Brain, text: t('features.aiAnalysis') },
+    { icon: FileText, text: t('features.autoReports') },
+    { icon: Activity, text: t('features.realTimeTracking') },
+    { icon: Shield, text: t('features.secureData') },
   ];
 
   return (
@@ -115,7 +115,7 @@ const RegisterPage = () => {
           className="absolute top-8 left-8 text-white/80 hover:text-white transition-colors flex items-center z-10 group"
         >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> 
-          <span className="font-medium">Voltar</span>
+          <span className="font-medium">{t('auth.back')}</span>
         </motion.button>
 
         <div className="flex flex-col justify-center h-full space-y-10 z-10 mt-8">
@@ -131,11 +131,11 @@ const RegisterPage = () => {
             </div>
             
             <h2 className="text-4xl xl:text-5xl font-extrabold mb-4 text-white leading-tight">
-              Comece sua jornada 
-              <span className="block bg-gradient-to-r from-primary-200 via-primary-100 to-white bg-clip-text text-transparent">em saúde inteligente</span>
+              {t('auth.startJourney')} 
+              <span className="block bg-gradient-to-r from-primary-200 via-primary-100 to-white bg-clip-text text-transparent">{t('auth.inSmartHealth')}</span>
             </h2>
             <p className="text-primary-100/90 text-lg xl:text-xl max-w-lg leading-relaxed">
-              Junte-se a nós para transformar a gestão de feridas com inteligência artificial.
+              {t('auth.joinUs')}
             </p>
           </motion.div>
           
@@ -166,7 +166,7 @@ const RegisterPage = () => {
           transition={{ delay: 0.8 }}
           className="text-sm text-white/60 z-10"
         >
-          © 2025 Heal+. Todos os direitos reservados.
+          © 2025 Heal+. {t('auth.allRightsReserved')}
         </motion.div>
       </div>
       
@@ -181,15 +181,15 @@ const RegisterPage = () => {
           
           <button onClick={() => navigate('/')} className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center mb-8 group">
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> 
-            <span className="font-medium">Voltar</span>
+            <span className="font-medium">{t('auth.back')}</span>
           </button>
 
           <div className="mb-6">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Crie sua conta
+              {t('auth.createAccount')}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Preencha os dados abaixo para começar
+              {t('auth.fillDetails')}
             </p>
           </div>
 
@@ -207,12 +207,12 @@ const RegisterPage = () => {
             {/* Campo Nome */}
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nome Completo
+                {t('auth.name')}
               </label>
               <Input
                 id="name"
                 name="name"
-                placeholder={t('auth.namePlaceholder')}
+                placeholder={t('auth.name')}
                 value={formData.name}
                 onChange={handleChange}
                 error={errors.name}
@@ -223,7 +223,7 @@ const RegisterPage = () => {
             {/* Campo Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email
+                {t('auth.email')}
               </label>
               <Input
                 id="email"
@@ -240,7 +240,7 @@ const RegisterPage = () => {
             {/* Campo Tipo de Usuário */}
             <div className="space-y-2">
               <label htmlFor="role" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Tipo de Usuário
+                {t('auth.role')}
               </label>
               <select
                 id="role"
@@ -257,7 +257,7 @@ const RegisterPage = () => {
             {/* Campo Senha */}
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Senha
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <Input
@@ -274,7 +274,7 @@ const RegisterPage = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showPassword ? t('common.hidePassword') : t('common.showPassword')}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -284,7 +284,7 @@ const RegisterPage = () => {
             {/* Campo Confirmar Senha */}
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirmar Senha
+                {t('auth.confirmPassword')}
               </label>
               <div className="relative">
                 <Input
@@ -301,7 +301,7 @@ const RegisterPage = () => {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                  aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  aria-label={showConfirmPassword ? t('common.hidePassword') : t('common.showPassword')}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -324,7 +324,7 @@ const RegisterPage = () => {
           <div className="flex items-center my-6">
             <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
             <span className="flex-shrink mx-4 text-gray-500 dark:text-gray-400 text-sm font-medium">
-              ou continue com
+              {t('auth.orContinueWith')}
             </span>
             <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent"></div>
           </div>

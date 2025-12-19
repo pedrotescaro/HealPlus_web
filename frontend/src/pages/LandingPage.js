@@ -83,14 +83,14 @@ const LandingPage = () => {
   ];
 
   const stats = [
-    { value: '68%', label: 'Precisão IA' },
-    { value: '50k+', label: 'Análises realizadas' },
-    { value: '24/7', label: 'Disponibilidade' },
-    { value: '4.9★', label: 'Avaliação média' },
+    { value: '68%', label: t('landing.stats.aiPrecision', 'Precisão IA') },
+    { value: '50k+', label: t('landing.stats.analysesPerformed', 'Análises realizadas') },
+    { value: '24/7', label: t('landing.stats.availability', 'Disponibilidade') },
+    { value: '4.9★', label: t('landing.stats.averageRating', 'Avaliação média') },
   ];
 
   if (user) {
-    return <LoadingPage message={`Carregando Heal+...`} />;
+    return <LoadingPage message={t('common.loading')} />;
   }
 
   return (
@@ -157,7 +157,7 @@ const LandingPage = () => {
             <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-full mb-8">
               <Sparkles className="w-4 h-4 text-primary-600 dark:text-primary-400" />
               <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                Tecnologia de ponta em saúde
+                {t('landing.badge', 'Tecnologia de ponta em saúde')}
               </span>
             </motion.div>
             
@@ -233,7 +233,7 @@ const LandingPage = () => {
           >
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-full mb-4">
               <Shield className="w-4 h-4 text-primary-600 dark:text-primary-400" />
-              <span className="text-sm font-medium text-primary-700 dark:text-primary-300">Recursos</span>
+              <span className="text-sm font-medium text-primary-700 dark:text-primary-300">{t('landing.resourcesBadge', 'Recursos')}</span>
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
               {t('landing.featuresTitle')}
@@ -342,7 +342,7 @@ const LandingPage = () => {
             <div className="max-w-sm">
               <Logo />
               <p className="mt-4 text-gray-500 leading-relaxed">
-                Plataforma inteligente para gestão e análise de feridas com tecnologia de ponta e inteligência artificial.
+                {t('landing.subtitle')}
               </p>
               
               {/* Redes sociais */}
@@ -368,25 +368,25 @@ const LandingPage = () => {
               {/* Coluna: Produto */}
               <div>
                 <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                  Produto
+                  {t('footer.product', 'Produto')}
                 </h4>
                 <ul className="space-y-3">
                   <li>
                     <a href="#features" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.resources') || 'Recursos'}
+                      {t('footer.resources', 'Recursos')}
                     </a>
                   </li>
                   <li>
                     <Link to="/pricing" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      Preços
+                      {t('footer.pricing', 'Preços')}
                     </Link>
                   </li>
                   <li>
                     <Link to="/testimonials" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.testimonials') || 'Depoimentos'}
+                      {t('footer.testimonials', 'Depoimentos')}
                     </Link>
                   </li>
                 </ul>
@@ -395,13 +395,13 @@ const LandingPage = () => {
               {/* Coluna: Suporte */}
               <div>
                 <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                  Suporte
+                  {t('footer.support', 'Suporte')}
                 </h4>
                 <ul className="space-y-3">
                   <li>
                     <a href="mailto:healgrupo@gmail.com" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.contact') || 'Contato'}
+                      {t('footer.contact', 'Contato')}
                     </a>
                   </li>
                   <li>
@@ -413,7 +413,7 @@ const LandingPage = () => {
                   <li>
                     <Link to="/help" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      Central de Ajuda
+                      {t('footer.helpCenter', 'Central de Ajuda')}
                     </Link>
                   </li>
                 </ul>
@@ -422,25 +422,25 @@ const LandingPage = () => {
               {/* Coluna: Legal */}
               <div>
                 <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                  Legal
+                  {t('footer.legal', 'Legal')}
                 </h4>
                 <ul className="space-y-3">
                   <li>
                     <Link to="/terms" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.terms') || 'Termos de Uso'}
+                      {t('footer.terms', 'Termos de Uso')}
                     </Link>
                   </li>
                   <li>
                     <Link to="/privacy" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.privacy') || 'Privacidade'}
+                      {t('footer.privacy', 'Privacidade')}
                     </Link>
                   </li>
                   <li>
                     <a href="/cookies" className="text-sm text-gray-400 hover:text-primary-400 transition-colors duration-200 flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-gray-600 group-hover:bg-primary-400 rounded-full transition-colors"></span>
-                      {t('footer.cookies') || 'Cookies'}
+                      {t('footer.cookies', 'Cookies')}
                     </a>
                   </li>
                 </ul>
@@ -451,12 +451,12 @@ const LandingPage = () => {
           {/* Rodapé inferior */}
           <div className="py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-500">
-              © 2025 Heal+. {t('footer.allRightsReserved') || 'Todos os direitos reservados.'}
+              © 2025 Heal+. {t('footer.allRightsReserved', 'Todos os direitos reservados.')}
             </p>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Feito com</span>
+              <span>{t('footer.madeWith', 'Feito com')}</span>
               <span className="text-red-500 animate-pulse">❤</span>
-              <span>no Brasil 🇧🇷</span>
+              <span>{t('footer.inBrazil', 'no Brasil')} 🇧🇷</span>
             </div>
           </div>
         </div>

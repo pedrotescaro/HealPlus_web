@@ -243,11 +243,11 @@ const AssessmentsPage = () => {
   }, [currentStep, formData, analysisResult]);
 
   const stepInfo = [
-    { key: 'patient', icon: User, label: 'Paciente', color: 'primary' },
-    { key: 'anamnesis', icon: Stethoscope, label: 'Anamnese', color: 'blue' },
-    { key: 'image', icon: Camera, label: 'Imagem', color: 'green' },
-    { key: 'analysis', icon: Brain, label: 'Análise IA', color: 'purple' },
-    { key: 'review', icon: FileCheck, label: 'Revisão', color: 'amber' }
+    { key: 'patient', icon: User, labelKey: 'assessments.stepPatient', label: t('assessments.stepPatient', 'Paciente'), color: 'primary' },
+    { key: 'anamnesis', icon: Stethoscope, labelKey: 'assessments.stepAnamnesis', label: t('assessments.stepAnamnesis', 'Anamnese'), color: 'blue' },
+    { key: 'image', icon: Camera, labelKey: 'assessments.stepImage', label: t('assessments.stepImage', 'Imagem'), color: 'green' },
+    { key: 'analysis', icon: Brain, labelKey: 'assessments.stepAnalysis', label: t('assessments.stepAnalysis', 'Análise IA'), color: 'purple' },
+    { key: 'review', icon: FileCheck, labelKey: 'assessments.stepReview', label: t('assessments.stepReview', 'Revisão'), color: 'amber' }
   ];
 
   const renderStepIndicator = () => (
@@ -333,7 +333,7 @@ const AssessmentsPage = () => {
               size="sm"
               onClick={() => setFormData(prev => ({ ...prev, patientId: '', patientName: '', patientData: null }))}
             >
-              Alterar
+              {t('records.change', 'Alterar')}
             </Button>
           </div>
         </Card>

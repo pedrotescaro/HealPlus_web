@@ -5,9 +5,9 @@ const Card = ({ children, className = '', onClick, hover = true }) => {
     <div
       onClick={onClick}
       className={`
-        bg-white rounded-lg shadow-md p-6
-        ${hover ? 'hover:shadow-lg transition-shadow duration-200 cursor-pointer' : ''}
-        ${onClick ? 'hover:shadow-lg' : ''}
+        bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-900/30 p-6 border border-gray-100 dark:border-gray-700
+        ${hover ? 'hover:shadow-lg dark:hover:shadow-gray-900/40 transition-shadow duration-200 cursor-pointer' : ''}
+        ${onClick ? 'hover:shadow-lg dark:hover:shadow-gray-900/40' : ''}
         ${className}
       `}
     >

@@ -10,7 +10,7 @@ const ChatPage = () => {
         {t('dashboard.chat')}
       </h1>
       <p className="text-gray-600 dark:text-gray-400 mt-1">
-        This page is under construction.
+        {t('common.underConstruction', 'Esta página está em construção.')}
       </p>
     </Layout>
   );
